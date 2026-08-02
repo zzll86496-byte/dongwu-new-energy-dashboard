@@ -19,6 +19,7 @@ test("renders the battery export dashboard shell", async () => {
   assert.match(html, /国内电池出口/);
   assert.match(html, /海关总署/);
   assert.match(html, /2026-06/);
+  assert.match(html, /6月电池出口更新交互表/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
@@ -30,4 +31,6 @@ test("renders the standalone June export summary table", async () => {
   assert.match(html, /累计同比/);
   assert.match(html, /广东省/);
   assert.match(html, /其他国家/);
+  assert.match(html, /国家、省份或洲别/);
+  assert.match(html, /点击表格任意行查看指标/);
 });
