@@ -155,6 +155,41 @@ function Donut({ rows, metric }: { rows: EntityRow[]; metric: Metric }) {
   return <div className="donut-layout"><div className="donut" style={{ background: `conic-gradient(${gradient})` }}><div><strong>{metricMeta[metric].compact(total)}</strong><span>{metricMeta[metric].unit}</span></div></div><div className="donut-legend">{ranked.map((row, index) => <div key={row.name}><i style={{ background: COLORS[index % COLORS.length] }} /><span>{row.name}</span><strong>{total ? (metricValue(row, metric) / total * 100).toFixed(1) : "0.0"}%</strong></div>)}</div></div>;
 }
 
+function DestinationHeatmap({ rows }: { rows: EntityRow[] }) {
+  const [year, setYear] = useState<"all" | "2024" | "2025" | "2026">("all");
+  const [limit, setLimit] = useState(15);
+  const [active, setActive] = useState<{ name: string; month: string; value: number } | null>(null);
+  const months = data.total.map((row) => row.month).filter((item) => year === "all" || item.startsWith(year));
+  const monthSet = new Set(months);
+  const visibleRows = rows.filter((row) => monthSet.has(row.month));
+  const totals = new Map<string, number>();
+  visibleRows.forEach((row) => totals.set(row.name, (totals.get(row.name) ?? 0) + row.amount));
+  const names = [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([name]) => name);
+  const lookup = new Map(visibleRows.map((row) => [`${row.name}|${row.month}`, row.amount]));
+  const max = Math.max(...names.flatMap((name) => months.map((item) => lookup.get(`${name}|${item}`) ?? 0)), 1);
+  const gridStyle = { gridTemplateColumns: `150px repeat(${months.length}, minmax(64px, 1fr)) 96px`, minWidth: `${246 + months.length * 64}px` };
+  const selected = active ?? (() => {
+    const name = names[0];
+    const month = months[months.length - 1];
+    return { name, month, value: lookup.get(`${name}|${month}`) ?? 0 };
+  })();
+
+  return <article className="panel heatmap-panel">
+    <div className="panel-head heatmap-titlebar"><div><span className="panel-kicker">SHEET1 · DESTINATION MATRIX</span><h2>主要目的地月度出口金额热力图</h2><p>复刻 Excel Sheet1 的国家 × 月份透视矩阵；颜色越深，单月出口金额越高。</p></div><div className="heatmap-controls"><div className="segmented" aria-label="选择年份">{(["all", "2024", "2025", "2026"] as const).map((item) => <button key={item} className={year === item ? "active" : ""} onClick={() => { setYear(item); setActive(null); }}>{item === "all" ? "全部" : item}</button>)}</div><label>显示<select value={limit} onChange={(event) => { setLimit(Number(event.target.value)); setActive(null); }}><option value={10}>Top 10</option><option value={15}>Top 15</option><option value={20}>Top 20</option></select></label></div></div>
+    <div className="heatmap-readout"><div><span>当前单元格</span><strong>{selected.name} · {selected.month}</strong></div><b>{selected.value.toFixed(2)}<small> 亿美元</small></b><div className="heatmap-legend"><span>低</span><i /><span>高</span></div></div>
+    <div className="heatmap-scroll" role="region" aria-label="主要目的地月度出口金额热力图" tabIndex={0}>
+      <div className="heatmap-row heatmap-header" style={gridStyle}><span className="heatmap-country">目的地</span>{months.map((item) => <span key={item}>{item.slice(2).replace("-", ".")}</span>)}<span className="heatmap-total">期间合计</span></div>
+      {names.map((name, rowIndex) => <div className="heatmap-row" style={gridStyle} key={name}><span className="heatmap-country"><i>{String(rowIndex + 1).padStart(2, "0")}</i>{name}</span>{months.map((item) => {
+        const value = lookup.get(`${name}|${item}`) ?? 0;
+        const intensity = Math.sqrt(value / max);
+        const isActive = active?.name === name && active.month === item;
+        return <button key={item} className={`heatmap-cell ${isActive ? "active" : ""}`} style={{ backgroundColor: `rgba(40,120,255,${0.06 + intensity * 0.88})`, color: intensity > .58 ? "#fff" : "#254d7f" }} onMouseEnter={() => setActive({ name, month: item, value })} onFocus={() => setActive({ name, month: item, value })} onClick={() => setActive({ name, month: item, value })} aria-label={`${name} ${item} 出口金额 ${value.toFixed(2)} 亿美元`} title={`${name} · ${item}\n${value.toFixed(2)} 亿美元`}>{value > 0 ? value.toFixed(1) : "—"}</button>;
+      })}<strong className="heatmap-total">{(totals.get(name) ?? 0).toFixed(1)}</strong></div>)}
+    </div>
+    <div className="heatmap-note"><span>单位：亿美元</span><span>横向滚动查看全部月份</span><span>国家排名按所选期间累计金额</span></div>
+  </article>;
+}
+
 function EntityTable({ rows, month, metric, search, limit = 80 }: { rows: EntityRow[]; month: string; metric: Metric; search: string; limit?: number }) {
   const current = rows.filter((row) => row.month === month && row.name.includes(search));
   const ytdStart = `${month.slice(0, 4)}-01`;
@@ -227,6 +262,7 @@ export function BatteryDashboard() {
 
     {tab === "overview" && <section className="view-stack">
       <div className="kpi-grid"><article><span>出口数量</span><strong>{(latest.quantity / 100_000_000).toFixed(2)}<small>亿个</small></strong><Delta value={pct(latest.quantity, priorYear?.quantity)} label="同比" /></article><article><span>平均单价</span><strong>{latest.unitPrice?.toFixed(2)}<small>美元/个</small></strong><Delta value={pct(latest.unitPrice ?? 0, priorYear?.unitPrice ?? undefined)} label="同比" /></article><article><span>第一目的地</span><strong>{topCountry?.name}</strong><small>{topCountry?.amount.toFixed(2)} 亿美元</small></article><article><span>第一出发地</span><strong>{topProvince?.name}</strong><small>{topProvince?.amount.toFixed(2)} 亿美元</small></article></div>
+      <DestinationHeatmap rows={data.countries} />
       <article className="panel featured"><div className="panel-head"><div><span className="panel-kicker">MONTHLY TREND</span><h2>各年同期对比</h2><p>按月份比较 2024—2026 年出口表现</p></div><MetricSwitch value={metric} onChange={setMetric} /></div><LineChart labels={MONTHS} series={yearSeries} metric={metric} height={350} /></article>
       <div className="grid two"><article className="panel"><div className="panel-head"><div><span className="panel-kicker">TOP DESTINATIONS</span><h3>{month} 目的地排名</h3></div><button className="text-button" onClick={() => setTab("countries")}>查看全部 →</button></div><Ranking rows={countryMonth} metric="amount" limit={8} /></article><article className="panel"><div className="panel-head"><div><span className="panel-kicker">CONTINENT MIX</span><h3>{month} 洲别结构</h3></div><span className="unit-pill">亿美元</span></div><Donut rows={continentMonth} metric="amount" /></article></div>
       <article className="insight-band"><div><span>本月观察</span><h3>出口动能保持强劲，市场结构更趋多元</h3></div><p><b>{month}</b> 出口金额同比 <strong>{formatChange(pct(latest.amount, priorYear?.amount))}</strong>；{topContinent?.name}以 <strong>{topContinent?.amount.toFixed(1)} 亿美元</strong> 居洲别首位，{topCountry?.name}为第一大目的地，{topProvince?.name}为第一大出发地。</p></article>
