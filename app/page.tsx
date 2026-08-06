@@ -1,5 +1,5 @@
-import { BatteryDashboard } from "./BatteryDashboard";
+import { Workbench } from "./Workbench";
 
 export default function Home() {
-  return <BatteryDashboard />;
+  return <Workbench />;
 }
