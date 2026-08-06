@@ -65,7 +65,7 @@ export function Sheet1Matrix() {
   };
 
   return <main className="summary-page">
-    <nav className="summary-page-nav"><a href="/">← 返回数据总览</a><span>电池总输出表 · 2026年6月</span></nav>
+    <nav className="summary-page-nav"><a href="./">← 返回数据总览</a><span>电池总输出表 · 2026年6月</span></nav>
     <section className="summary-card" aria-label="2026年6月电池出口数据更新表">
       <header className="summary-banner"><strong>东吴电新</strong><h1>26年6月电池出口数据更新：同比+31.7%/+8.3%</h1></header>
       <div className="summary-interactive">
