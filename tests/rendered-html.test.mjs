@@ -16,7 +16,13 @@ test("renders the lithium planning dashboard shell", async () => {
   assert.match(html, /PLANNING DASHBOARD/);
   assert.match(html, /产业环节/);
   assert.match(html, /2026-08/);
-  assert.match(html, /环比观察/);
+  assert.match(html, /aria-label="选择企业"/);
+  assert.match(html, /电池/);
+  assert.match(html, /正极/);
+  assert.match(html, /负极/);
+  assert.match(html, /隔膜/);
+  assert.match(html, /电解液/);
+  assert.doesNotMatch(html, /环比观察|搜索企业/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 

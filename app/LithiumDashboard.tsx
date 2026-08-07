@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import rawData from "./data/lithium-production.json";
 
 type Value = { period: string; raw: string; value: number | null; mom: number | null };
@@ -12,7 +12,6 @@ const data = rawData as DataSet;
 const periods = data.periods.slice(-12);
 const rawPeriods = [...periods].reverse();
 const palette = ["#15385f", "#a89d64", "#7e8790", "#c28a46", "#536776", "#c3c7ca", "#806b51", "#9e7b55"];
-const heroKeys = ["battery", "anode", "separator"];
 
 const periodLabel = (period: string) => period.replace("-", ".");
 const shortPeriod = (period: string) => period.slice(2).replace("-", ".");
@@ -33,21 +32,17 @@ export function LithiumDashboard() {
   const [period, setPeriod] = useState(data.meta.latestPeriod);
   const [mode, setMode] = useState<"value" | "mom">("value");
   const [selectedCompanyName, setSelectedCompanyName] = useState("");
-  const [companyQuery, setCompanyQuery] = useState("");
   const [lineFocusPeriod, setLineFocusPeriod] = useState("");
   const category = data.categories.find((item) => item.key === categoryKey) ?? data.categories[0];
-  const rows = useMemo(() => category.companies.filter((company) => company.name.includes(companyQuery.trim())), [category, companyQuery]);
   const selectedCompany = category.companies.find((company) => company.name === selectedCompanyName) ?? category.companies[0];
-  const selectedTotal = category.totals.find((value) => value.period === period) ?? category.totals.at(-1)!;
   const recentTotals = category.totals.filter((value) => periods.includes(value.period));
   const maxTotal = Math.max(...recentTotals.map((value) => value.value ?? 0), 1);
   const companyMax = Math.max(...category.companies.flatMap((company) => company.values.filter((value) => periods.includes(value.period)).map((value) => value.value ?? 0)), 1);
   const selectedMax = Math.max(...selectedCompany.values.filter((value) => periods.includes(value.period)).map((value) => value.value ?? 0), 1);
   const allLatest = data.categories.map((item) => ({ ...item, latest: item.totals.find((value) => value.period === period) ?? item.totals.at(-1)! }));
-  const featured = heroKeys.map((key) => allLatest.find((item) => item.key === key)!).filter(Boolean);
   const composition = category.companies.map((company) => ({ name: company.name, value: valueAt(company, period)?.value ?? 0 })).sort((a, b) => b.value - a.value);
   const compositionTotal = composition.reduce((sum, item) => sum + item.value, 0) || 1;
-  const selectCategory = (key: string) => { setCategoryKey(key); setSelectedCompanyName(""); setCompanyQuery(""); setLineFocusPeriod(""); };
+  const selectCategory = (key: string) => { setCategoryKey(key); setSelectedCompanyName(""); setLineFocusPeriod(""); };
   const selectCompany = (name: string, nextPeriod?: string) => { setSelectedCompanyName(name); if (nextPeriod) setPeriod(nextPeriod); };
 
   return <main className="dw-shell">
@@ -62,8 +57,7 @@ export function LithiumDashboard() {
       </div>
       <div className="dw-filter-group">
         <span className="dw-label">企业</span>
-        <div className="dw-search"><input aria-label="搜索企业" value={companyQuery} onChange={(event) => setCompanyQuery(event.target.value)} placeholder="搜索企业" /><button aria-label="清除企业搜索" onClick={() => setCompanyQuery("")}>清除</button></div>
-        {companyQuery && <div className="dw-search-results">{rows.slice(0, 5).map((company) => <button key={company.name} onClick={() => { selectCompany(company.name); setCompanyQuery(company.name); }}>{company.name}<b>{signed(valueAt(company, period)?.mom)}</b></button>)}</div>}
+        <select className="dw-company-select" aria-label="选择企业" value={selectedCompany.name} onChange={(event) => selectCompany(event.target.value)}>{category.companies.map((company) => <option key={company.name} value={company.name}>{company.name}</option>)}</select>
       </div>
       <div className="dw-sidebar-note"><b>当前企业</b><strong>{selectedCompany.name}</strong><span>{category.name} · {period}</span></div>
       <div className="dw-sidebar-foot"><span>数据更新</span><b>2026-08-05</b><small>点击图例、折线点或表格可联动查看</small></div>
@@ -73,8 +67,7 @@ export function LithiumDashboard() {
       <header className="dw-top">
         <div className="dw-title"><span>DONGWU NEW ENERGY · PLANNING DASHBOARD</span><h1>锂电产业链排产数据库</h1><p>{category.name} · {period} · {category.unit}</p></div>
         <section className="dw-kpis">
-          {featured.map((item) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => selectCategory(item.key)}><span>{item.name}</span><strong>{fmt(item.latest.value)}<small>{item.unit}</small></strong><p>环比 <b>{signed(item.latest.mom)}</b></p></button>)}
-          <article className="dw-observe"><span>环比观察</span><small>{period}</small><strong>{signed(selectedTotal.mom)}</strong><p>{category.name}环比</p></article>
+          {allLatest.map((item) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => selectCategory(item.key)}><span>{item.name}</span><strong>{fmt(item.latest.value)}<small>{item.unit}</small></strong><p>环比 <b>{signed(item.latest.mom)}</b></p></button>)}
         </section>
       </header>
 
