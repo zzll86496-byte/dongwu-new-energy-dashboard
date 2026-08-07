@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 
-const title = "国内电池出口数据观察站｜东吴电新";
-const description = "面向日常研究的电池、光伏、风电与产业链数据看板。";
+const title = "东吴电新｜锂电产业链排产数据库";
+const description = "基于企业排产数据的锂电产业链可视化看板，包含原始排产、趋势、环比和企业结构。";
 
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();

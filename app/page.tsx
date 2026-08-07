@@ -1,5 +1,5 @@
-import { Workbench } from "./Workbench";
+import { LithiumDashboard } from "./LithiumDashboard";
 
 export default function Home() {
-  return <Workbench />;
+  return <LithiumDashboard />;
 }
