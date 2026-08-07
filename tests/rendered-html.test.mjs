@@ -8,26 +8,26 @@ async function render(path = "/") {
   return worker.fetch(new Request(`http://localhost${path}`, { headers: { accept: "text/html" } }), { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } }, { waitUntil() {}, passThroughOnException() {} });
 }
 
-test("renders the battery export dashboard shell", async () => {
+test("renders the lithium planning dashboard shell", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /<title>国内电池出口数据观察站｜东吴电新<\/title>/);
-  assert.match(html, /新能源数据看板/);
-  assert.match(html, /海关总署/);
-  assert.match(html, /2026-06/);
-  assert.match(html, /6 月电池出口更新/);
+  assert.match(html, /<title>东吴电新｜锂电产业链排产数据库<\/title>/);
+  assert.match(html, /PLANNING DASHBOARD/);
+  assert.match(html, /产业环节/);
+  assert.match(html, /2026-08/);
+  assert.match(html, /环比观察/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
-test("renders the standalone June export summary table", async () => {
-  const response = await render("/sheet1");
+test("renders the dense reference-style planning modules", async () => {
+  const response = await render();
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /26年6月电池出口数据更新/);
-  assert.match(html, /累计同比/);
-  assert.match(html, /广东省/);
-  assert.match(html, /其他国家/);
-  assert.match(html, /国家、省份或洲别/);
-  assert.match(html, /点击表格任意行查看指标/);
+  assert.match(html, /总量趋势/);
+  assert.match(html, /企业横向对比/);
+  assert.match(html, /纵向数据/);
+  assert.match(html, /企业结构/);
+  assert.match(html, /原始数据/);
+  assert.match(html, /点击企业或单元格可联动图表/);
 });

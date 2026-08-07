@@ -11,24 +11,21 @@ type DataSet = { meta: { title: string; latestPeriod: string; source: string; di
 const data = rawData as DataSet;
 const periods = data.periods.slice(-12);
 const rawPeriods = [...periods].reverse();
-const palette = ["#12355e", "#a99b5a", "#8c8c8e", "#6f7d8c", "#ed7d31", "#c9c9c9", "#173e69", "#a99b5a"];
-const T = {
-  brand: "\u4e1c\u5434\u7535\u65b0", title: "\u9502\u7535\u4ea7\u4e1a\u94fe\u6392\u4ea7\u6570\u636e\u5e93", month: "\u5206\u6790\u6708\u4efd", segment: "\u4ea7\u4e1a\u73af\u8282", raw: "\u539f\u59cb\u6570\u636e", company: "\u4f01\u4e1a", search: "\u641c\u7d22\u4f01\u4e1a", clear: "\u6e05\u9664", trend: "\u603b\u91cf\u8d8b\u52bf", line: "\u4f01\u4e1a\u6a2a\u5411\u5bf9\u6bd4", vertical: "\u516c\u53f8\u7eb5\u5411\u6570\u636e", value: "\u4ea7\u91cf", mom: "\u73af\u6bd4", structure: "\u4f01\u4e1a\u7ed3\u6784", observe: "\u73af\u6bd4\u89c2\u5bdf", selected: "\u5f53\u524d\u4f01\u4e1a", update: "\u6700\u540e\u66f4\u65b0", interaction: "\u4ea4\u4e92\u65b9\u5f0f", interactionDesc: "\u70b9\u51fb\u4f01\u4e1a\u884c\u3001\u6298\u7ebf\u6216\u56fe\u4f8b\uff0c\u53ef\u8054\u52a8\u516c\u53f8\u7eb5\u5411\u67f1\u72b6\u56fe\u3002"
-};
+const palette = ["#15385f", "#a89d64", "#7e8790", "#c28a46", "#536776", "#c3c7ca", "#806b51", "#9e7b55"];
+const heroKeys = ["battery", "anode", "separator"];
 
 const periodLabel = (period: string) => period.replace("-", ".");
-const fmt = (value: number | null | undefined, digits = 1) => value == null || !Number.isFinite(value) ? "\u2014" : value.toLocaleString("zh-CN", { maximumFractionDigits: digits, minimumFractionDigits: digits });
-const signed = (value: number | null | undefined) => value == null || !Number.isFinite(value) ? "\u2014" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
+const shortPeriod = (period: string) => period.slice(2).replace("-", ".");
+const fmt = (value: number | null | undefined, digits = 1) => value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("zh-CN", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+const signed = (value: number | null | undefined) => value == null || !Number.isFinite(value) ? "—" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
 const valueAt = (company: Company, period: string) => company.values.find((value) => value.period === period);
 
-function linePoint(value: number, max: number, index: number, count: number) {
-  const x = 58 + (index * 660) / Math.max(count - 1, 1);
-  const y = 220 - (value / Math.max(max, 1)) * 176;
-  return { x, y };
+function point(value: number, max: number, index: number, count: number) {
+  return { x: 42 + (index * 676) / Math.max(count - 1, 1), y: 150 - (value / Math.max(max, 1)) * 112 };
 }
 
-function linePoints(company: Company, max: number) {
-  return periods.map((period, index) => { const point = linePoint(valueAt(company, period)?.value ?? 0, max, index, periods.length); return `${point.x.toFixed(1)},${point.y.toFixed(1)}`; }).join(" ");
+function points(company: Company, max: number) {
+  return periods.map((period, index) => { const p = point(valueAt(company, period)?.value ?? 0, max, index, periods.length); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(" ");
 }
 
 export function LithiumDashboard() {
@@ -36,54 +33,65 @@ export function LithiumDashboard() {
   const [period, setPeriod] = useState(data.meta.latestPeriod);
   const [mode, setMode] = useState<"value" | "mom">("value");
   const [selectedCompanyName, setSelectedCompanyName] = useState("");
+  const [companyQuery, setCompanyQuery] = useState("");
   const [lineFocusPeriod, setLineFocusPeriod] = useState("");
   const category = data.categories.find((item) => item.key === categoryKey) ?? data.categories[0];
+  const rows = useMemo(() => category.companies.filter((company) => company.name.includes(companyQuery.trim())), [category, companyQuery]);
+  const selectedCompany = category.companies.find((company) => company.name === selectedCompanyName) ?? category.companies[0];
   const selectedTotal = category.totals.find((value) => value.period === period) ?? category.totals.at(-1)!;
-  const rows = useMemo(() => category.companies, [category]);
-  const selectedCompany = category.companies.find((company) => company.name === selectedCompanyName) ?? rows[0] ?? category.companies[0];
   const recentTotals = category.totals.filter((value) => periods.includes(value.period));
   const maxTotal = Math.max(...recentTotals.map((value) => value.value ?? 0), 1);
   const companyMax = Math.max(...category.companies.flatMap((company) => company.values.filter((value) => periods.includes(value.period)).map((value) => value.value ?? 0)), 1);
   const selectedMax = Math.max(...selectedCompany.values.filter((value) => periods.includes(value.period)).map((value) => value.value ?? 0), 1);
   const allLatest = data.categories.map((item) => ({ ...item, latest: item.totals.find((value) => value.period === period) ?? item.totals.at(-1)! }));
-  const composition = rows.map((company) => ({ name: company.name, value: valueAt(company, period)?.value ?? 0 })).sort((a, b) => b.value - a.value);
-  const seriesPalette = category.companies.length <= 2 ? ["#173e69", "#a99b5a"] : palette;
+  const featured = heroKeys.map((key) => allLatest.find((item) => item.key === key)!).filter(Boolean);
+  const composition = category.companies.map((company) => ({ name: company.name, value: valueAt(company, period)?.value ?? 0 })).sort((a, b) => b.value - a.value);
+  const compositionTotal = composition.reduce((sum, item) => sum + item.value, 0) || 1;
+  const selectCategory = (key: string) => { setCategoryKey(key); setSelectedCompanyName(""); setCompanyQuery(""); setLineFocusPeriod(""); };
   const selectCompany = (name: string, nextPeriod?: string) => { setSelectedCompanyName(name); if (nextPeriod) setPeriod(nextPeriod); };
 
-  return <main className="planning-shell">
-    <div className="planning-layout">
-      <aside className="planning-sidebar">
-        <div className="sidebar-brand"><div className="sidebar-logo">{T.brand.slice(0, 2)}</div><div><strong>{T.brand}</strong><small>NEW ENERGY DATA</small></div></div>
-        <div className="sidebar-rule" />
-        <div className="sidebar-block"><label>{T.month}</label><select value={period} onChange={(event) => setPeriod(event.target.value)}>{data.periods.map((item) => <option key={item}>{item}</option>)}</select></div>
-        <div className="sidebar-block"><label>{T.segment}</label><div className="segment-buttons">{data.categories.map((item, index) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => { setCategoryKey(item.key); setSelectedCompanyName(""); }}><i style={{ background: palette[index % palette.length] }} />{item.name}</button>)}</div></div>
-        <div className="sidebar-block company-picker"><label>{T.company}</label><select className="company-select" value={selectedCompany.name} onChange={(event) => selectCompany(event.target.value)}>{category.companies.map((company) => <option key={company.name} value={company.name}>{company.name}</option>)}</select><div className="company-list">{category.companies.map((company, index) => <button className={selectedCompany.name === company.name ? "active" : ""} key={company.name} onClick={() => selectCompany(company.name)}><i style={{ background: seriesPalette[index % seriesPalette.length] }} /><span>{company.name}</span><b>{signed(valueAt(company, period)?.mom)}</b></button>)}</div></div>
-        <div className="sidebar-block selected-summary"><label>{T.selected}</label><strong>{selectedCompany.name}</strong><span>{category.name} · {period}</span><b className={valueAt(selectedCompany, period)?.mom != null && (valueAt(selectedCompany, period)?.mom ?? 0) < 0 ? "negative-text" : "positive-text"}>{signed(valueAt(selectedCompany, period)?.mom)}</b></div>
-        <div className="sidebar-help"><b>{T.interaction}</b><p>{T.interactionDesc}</p></div>
-        <div className="sidebar-foot">{T.update}：2026-08-05<br />{data.meta.source}</div>
-      </aside>
+  return <main className="dw-shell">
+    <aside className="dw-sidebar">
+      <div className="dw-brand"><span>东吴</span><div><strong>东吴电新</strong><small>NEW ENERGY DATA</small></div></div>
+      <div className="dw-divider" />
+      <label className="dw-label" htmlFor="period">分析月份</label>
+      <select id="period" className="dw-select" value={period} onChange={(event) => setPeriod(event.target.value)}>{data.periods.map((item) => <option key={item}>{item}</option>)}</select>
+      <div className="dw-filter-group">
+        <span className="dw-label">产业环节</span>
+        <div className="dw-segments">{data.categories.map((item) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => selectCategory(item.key)}><i />{item.name}</button>)}</div>
+      </div>
+      <div className="dw-filter-group">
+        <span className="dw-label">企业</span>
+        <div className="dw-search"><input aria-label="搜索企业" value={companyQuery} onChange={(event) => setCompanyQuery(event.target.value)} placeholder="搜索企业" /><button aria-label="清除企业搜索" onClick={() => setCompanyQuery("")}>清除</button></div>
+        {companyQuery && <div className="dw-search-results">{rows.slice(0, 5).map((company) => <button key={company.name} onClick={() => { selectCompany(company.name); setCompanyQuery(company.name); }}>{company.name}<b>{signed(valueAt(company, period)?.mom)}</b></button>)}</div>}
+      </div>
+      <div className="dw-sidebar-note"><b>当前企业</b><strong>{selectedCompany.name}</strong><span>{category.name} · {period}</span></div>
+      <div className="dw-sidebar-foot"><span>数据更新</span><b>2026-08-05</b><small>点击图例、折线点或表格可联动查看</small></div>
+    </aside>
 
-      <section className="planning-main">
-        <header className="planning-topbar"><div><span className="topbar-kicker">DONGWU NEW ENERGY · PLANNING DASHBOARD</span><h1>{T.title}</h1><p>{category.name} · {period} · {category.unit}</p></div><div className="topbar-mode"><span>{T.value} / {T.mom}</span><div className="mode-switch"><button className={mode === "value" ? "active" : ""} onClick={() => setMode("value")}>{T.value}</button><button className={mode === "mom" ? "active" : ""} onClick={() => setMode("mom")}>{T.mom}</button></div></div></header>
+    <section className="dw-workspace">
+      <header className="dw-top">
+        <div className="dw-title"><span>DONGWU NEW ENERGY · PLANNING DASHBOARD</span><h1>锂电产业链排产数据库</h1><p>{category.name} · {period} · {category.unit}</p></div>
+        <section className="dw-kpis">
+          {featured.map((item) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => selectCategory(item.key)}><span>{item.name}</span><strong>{fmt(item.latest.value)}<small>{item.unit}</small></strong><p>环比 <b>{signed(item.latest.mom)}</b></p></button>)}
+          <article className="dw-observe"><span>环比观察</span><small>{period}</small><strong>{signed(selectedTotal.mom)}</strong><p>{category.name}环比</p></article>
+        </section>
+      </header>
 
-        <section className="planning-kpis">{allLatest.map((item) => <button className={`metric-card ${item.key === categoryKey ? "active" : ""}`} key={item.key} onClick={() => { setCategoryKey(item.key); setSelectedCompanyName(""); }}><span>{item.name}</span><div className="metric-value">{fmt(item.latest.value)}<small>{item.unit}</small></div><p>{T.mom} <b className={item.latest.mom != null && item.latest.mom < 0 ? "negative-text" : "positive-text"}>{signed(item.latest.mom)}</b></p></button>)}</section>
+      <div className="dw-mode"><span>观察口径</span><button className={mode === "value" ? "active" : ""} onClick={() => setMode("value")}>产量</button><button className={mode === "mom" ? "active" : ""} onClick={() => setMode("mom")}>环比</button></div>
 
-        <div className="planning-grid">
-          <section className="dashboard-card trend-card"><div className="card-titlebar"><b>{category.name}{T.trend}</b><span>{T.value}</span></div><div className="bar-chart-wrap"><div className="bar-axis"><span>{fmt(maxTotal, 0)}</span><span>{fmt(maxTotal / 2, 0)}</span><span>0</span></div><div className="bar-chart-area">{recentTotals.map((item) => { const height = mode === "value" ? ((item.value ?? 0) / maxTotal) * 100 : Math.min(Math.abs(item.mom ?? 0) * 260, 100); return <div className="bar-item" key={item.period}><span>{mode === "value" ? fmt(item.value) : signed(item.mom)}</span><i className={item.mom != null && item.mom < 0 ? "negative-bar" : "positive-bar"} style={{ height: `${Math.max(height, 3)}%` }} /><small>{periodLabel(item.period)}</small></div>; })}</div></div></section>
+      <div className="dw-grid">
+        <section className="dw-card dw-trend"><div className="dw-card-head"><b>{category.name}总量趋势</b><span>{category.unit}</span></div><div className="dw-bar-chart"><div className="dw-y-axis"><span>{fmt(maxTotal, 0)}</span><span>{fmt(maxTotal / 2, 0)}</span><span>0</span></div><div className="dw-bars">{recentTotals.map((item, index) => { const rawHeight = mode === "value" ? ((item.value ?? 0) / maxTotal) * 100 : Math.min(Math.abs(item.mom ?? 0) * 300, 100); return <button className={item.period === period ? "active" : ""} key={item.period} onClick={() => setPeriod(item.period)}><span>{mode === "value" ? fmt(item.value) : signed(item.mom)}</span><i className={index % 2 ? "navy" : "gray"} style={{ height: `${Math.max(rawHeight, 3)}%` }} /><small>{shortPeriod(item.period)}</small></button>; })}</div></div></section>
 
-          <section className="dashboard-card line-card"><div className="card-titlebar"><b>{category.name}{T.line}</b><span>{category.unit}</span></div><div className="line-legend">{category.companies.map((company, index) => <button className={selectedCompany.name === company.name ? "active" : ""} key={company.name} onClick={() => selectCompany(company.name)}><i style={{ background: seriesPalette[index % seriesPalette.length] }} />{company.name}</button>)}</div><div className="line-chart"><svg viewBox="0 0 760 270" role="img" aria-label={`${category.name}${T.line}`}>{[0, 1, 2, 3, 4].map((step) => { const y = 220 - step * 44; return <g key={step}><line x1="58" y1={y} x2="718" y2={y} /><text x="47" y={y + 4} textAnchor="end">{fmt((companyMax * step) / 4, 0)}</text></g>; })}<line className="axis" x1="58" y1="220" x2="718" y2="220" /><line className="axis" x1="58" y1="44" x2="58" y2="220" />{category.companies.map((company, index) => <g key={company.name} className="line-series" onClick={() => selectCompany(company.name)}><polyline points={linePoints(company, companyMax)} fill="none" stroke={seriesPalette[index % seriesPalette.length]} strokeWidth={selectedCompany.name === company.name ? 3.8 : 2.2} opacity={selectedCompany.name === company.name ? 1 : .86} />{periods.map((item, pointIndex) => { const point = linePoint(valueAt(company, item)?.value ?? 0, companyMax, pointIndex, periods.length); return <circle key={item} cx={point.x} cy={point.y} r={selectedCompany.name === company.name ? 4 : 3} fill={seriesPalette[index % seriesPalette.length]} onClick={(event) => { event.stopPropagation(); setLineFocusPeriod(item); }}><title>{`${company.name} ${periodLabel(item)}: ${valueAt(company, item)?.raw || "\u2014"}`}</title></circle>; })}</g>)}{periods.map((item, index) => { const point = linePoint(0, companyMax, index, periods.length); return <text key={item} x={point.x} y="244" textAnchor="middle">{periodLabel(item)}</text>; })}</svg></div>{lineFocusPeriod && <div className="line-tooltip" role="status"><div className="line-tooltip-head"><strong>{periodLabel(lineFocusPeriod)}</strong><span>{category.unit}</span><button aria-label="关闭同期数据" onClick={() => setLineFocusPeriod("")}>×</button></div><div className="line-tooltip-list">{category.companies.map((company, index) => <div key={company.name}><i style={{ background: seriesPalette[index % seriesPalette.length] }} /><span>{company.name}</span><b>{fmt(valueAt(company, lineFocusPeriod)?.value)}</b></div>)}</div></div>}</section>
+        <section className="dw-card dw-lines"><div className="dw-card-head"><b>{category.name}企业横向对比</b><span>{category.unit}</span></div><div className="dw-legend">{category.companies.map((company, index) => <button className={selectedCompany.name === company.name ? "active" : ""} key={company.name} onClick={() => selectCompany(company.name)}><i style={{ background: palette[index % palette.length] }} />{company.name}</button>)}</div><div className="dw-line-chart"><svg viewBox="0 0 760 182" role="img" aria-label={`${category.name}企业横向对比`}>{[0, 1, 2, 3].map((step) => { const y = 150 - step * 37.33; return <g key={step}><line x1="42" y1={y} x2="718" y2={y} /><text x="34" y={y + 3} textAnchor="end">{fmt((companyMax * step) / 3, 0)}</text></g>; })}{category.companies.map((company, index) => <g key={company.name} onClick={() => selectCompany(company.name)}><polyline points={points(company, companyMax)} fill="none" stroke={palette[index % palette.length]} strokeWidth={selectedCompany.name === company.name ? 2.5 : 1.4} opacity={selectedCompany.name === company.name ? 1 : .78} />{periods.map((item, pointIndex) => { const p = point(valueAt(company, item)?.value ?? 0, companyMax, pointIndex, periods.length); return <circle key={item} cx={p.x} cy={p.y} r={selectedCompany.name === company.name ? 3 : 2} fill={palette[index % palette.length]} onClick={(event) => { event.stopPropagation(); setLineFocusPeriod(item); setPeriod(item); }} />; })}</g>)}{periods.map((item, index) => <text key={item} x={point(0, companyMax, index, periods.length).x} y="172" textAnchor="middle">{shortPeriod(item)}</text>)}</svg></div>{lineFocusPeriod && <div className="dw-tooltip"><div><b>{periodLabel(lineFocusPeriod)}</b><button onClick={() => setLineFocusPeriod("")}>×</button></div>{category.companies.map((company, index) => <p key={company.name}><i style={{ background: palette[index % palette.length] }} />{company.name}<strong>{fmt(valueAt(company, lineFocusPeriod)?.value)}</strong></p>)}</div>}</section>
 
-          <section className="dashboard-card ratio-card"><div className="card-titlebar"><b>{T.observe}</b><span>{period.slice(2)}</span></div><div className="ratio-main"><strong className={selectedTotal.mom != null && selectedTotal.mom < 0 ? "negative-text" : "positive-text"}>{signed(selectedTotal.mom)}</strong><small>{category.name} {T.mom}</small></div><div className="ratio-list">{allLatest.map((item) => <div key={item.key}><span>{item.name}</span><b className={item.latest.mom != null && item.latest.mom < 0 ? "negative-text" : "positive-text"}>{signed(item.latest.mom)}</b></div>)}</div></section>
+        <section className="dw-card dw-company"><div className="dw-card-head"><b>{selectedCompany.name}纵向数据</b><span>{period}</span></div><div className="dw-company-chart"><div className="dw-y-axis"><span>{fmt(selectedMax, 0)}</span><span>{fmt(selectedMax / 2, 0)}</span><span>0</span></div><div className="dw-bars">{selectedCompany.values.filter((value) => periods.includes(value.period)).map((value) => <button className={value.period === period ? "active" : ""} key={value.period} onClick={() => setPeriod(value.period)}><span>{fmt(value.value)}</span><i className="gray" style={{ height: `${Math.max(((value.value ?? 0) / selectedMax) * 100, 3)}%` }} /><small>{shortPeriod(value.period)}</small></button>)}</div></div></section>
 
+        <section className="dw-card dw-composition"><div className="dw-card-head"><b>企业结构</b><span>{period}</span></div><div className="dw-composition-body"><div className="dw-donut"><span><b>{composition.length}</b><small>家企业</small></span></div><div className="dw-composition-list">{composition.slice(0, 6).map((item, index) => <button key={item.name} onClick={() => selectCompany(item.name)}><i style={{ background: palette[index] }} /><span>{item.name}</span><b>{((item.value / compositionTotal) * 100).toFixed(1)}%</b></button>)}</div></div></section>
 
-          <section className="dashboard-card company-card"><div className="card-titlebar"><b>{selectedCompany.name}{T.vertical}</b><span>{period}</span></div><div className="company-chart"><div className="company-axis"><span>{fmt(selectedMax, 0)}</span><span>{fmt(selectedMax / 2, 0)}</span><span>0</span></div><div className="company-bars">{selectedCompany.values.filter((value) => periods.includes(value.period)).map((value) => <div className="company-bar" key={value.period}><span>{fmt(value.value)}</span><i style={{ height: `${Math.max(((value.value ?? 0) / selectedMax) * 100, 3)}%` }} /><small>{periodLabel(value.period)}</small></div>)}</div></div></section>
-
-          <section className="dashboard-card composition-card"><div className="card-titlebar"><b>{T.structure}</b><span>{period}</span></div><div className="composition-body"><div className="donut"><div><strong>{fmt(selectedTotal.value)}</strong><small>{category.unit}</small></div></div><div className="composition-list">{composition.slice(0, 6).map((item, index) => <div key={item.name}><i style={{ background: palette[index] }} /><span>{item.name}</span><b>{fmt(item.value)}</b></div>)}</div></div></section>
-
-          <section className="dashboard-card raw-card"><div className="card-titlebar"><b>{T.raw}</b><span>{category.name} · {period}</span></div><div className="raw-table-wrap"><table className="raw-table"><thead><tr><th>{T.company}</th>{rawPeriods.map((item) => <th key={item}>{periodLabel(item)}</th>)}</tr></thead><tbody>{rows.map((company) => <tr className={selectedCompany.name === company.name ? "selected" : ""} key={company.name} onClick={() => selectCompany(company.name)}><th>{company.name}</th>{rawPeriods.map((item) => { const value = valueAt(company, item); return <td key={item} title={value?.raw} onClick={(event) => { event.stopPropagation(); selectCompany(company.name, item); }}>{mode === "value" ? value?.raw || "\u2014" : signed(value?.mom)}</td>; })}</tr>)}</tbody></table></div><div className="raw-note">\u70b9\u51fb\u4f01\u4e1a\u884c\u6216\u5355\u5143\u683c\u8054\u52a8\u56fe\u8868</div></section>
-        </div>
-        <footer className="planning-footer"><span>{data.meta.disclaimer}</span><span>{data.meta.source}</span></footer>
-      </section>
-    </div>
+        <section className="dw-card dw-raw"><div className="dw-card-head"><b>原始数据</b><span>{category.name} · {period}</span></div><div className="dw-table-wrap"><table><thead><tr><th>企业</th>{rawPeriods.slice(0, 4).map((item) => <th key={item}>{shortPeriod(item)}</th>)}</tr></thead><tbody>{category.companies.slice(0, 5).map((company) => <tr className={selectedCompany.name === company.name ? "active" : ""} key={company.name} onClick={() => selectCompany(company.name)}><th>{company.name}</th>{rawPeriods.slice(0, 4).map((item) => <td key={item} title={valueAt(company, item)?.raw} onClick={(event) => { event.stopPropagation(); selectCompany(company.name, item); }}>{mode === "value" ? valueAt(company, item)?.raw || "—" : signed(valueAt(company, item)?.mom)}</td>)}</tr>)}</tbody></table></div><div className="dw-table-note">点击企业或单元格可联动图表 · 完整数据随产业环节切换</div></section>
+      </div>
+      <footer className="dw-footer"><span>{data.meta.disclaimer}</span><span>{data.meta.source}</span></footer>
+    </section>
   </main>;
 }
