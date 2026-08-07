@@ -7,6 +7,7 @@ type Value = { period: string; raw: string; value: number | null; mom: number | 
 type Company = { name: string; values: Value[] };
 type Category = { key: string; name: string; unit: string; color: string; companies: Company[]; totals: Value[] };
 type DataSet = { meta: { title: string; latestPeriod: string; source: string; disclaimer: string }; periods: string[]; categories: Category[] };
+type MaterialPoint = { period: string; value: number | null };
 
 const data = rawData as DataSet;
 const periods = data.periods.slice(-12);
@@ -34,6 +35,29 @@ function points(company: Company, max: number) {
   return periods.map((period, index) => { const p = point(valueAt(company, period)?.value ?? 0, max, index, periods.length); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(" ");
 }
 
+const cathodeFallback: Record<string, "ternary" | "lfp"> = { "容百科技": "ternary", "湖南裕能": "lfp", "德方纳米": "lfp" };
+
+function materialValue(company: Company, item: Value, material: "ternary" | "lfp") {
+  const label = material === "ternary" ? "三元" : "铁锂";
+  const match = item.raw.match(new RegExp(`([\\d.]+)\\s*${label}`));
+  if (match) return Number(match[1]);
+  if (/三元|铁锂|钴酸锂/.test(item.raw)) return 0;
+  return cathodeFallback[company.name] === material ? item.value : null;
+}
+
+function materialMom(series: MaterialPoint[], index: number) {
+  if (index <= 0) return null;
+  const current = series[index].value;
+  const previous = series[index - 1].value;
+  return current == null || previous == null || previous === 0 ? null : current / previous - 1;
+}
+
+function MaterialPanel({ title, series, mode, activePeriod, onPeriod }: { title: string; series: MaterialPoint[]; mode: "value" | "mom"; activePeriod: string; onPeriod: (period: string) => void }) {
+  const valueMax = Math.max(...series.map((item) => item.value ?? 0), 1);
+  const momMax = Math.max(...series.map((_, index) => Math.abs(materialMom(series, index) ?? 0)), .01);
+  return <section className="dw-card dw-material"><div className="dw-card-head"><b>{title}{mode === "value" ? "纵向产量" : "纵向环比"}</b><span>{mode === "value" ? "吨" : "%"}</span></div><div className="dw-company-chart"><div className="dw-y-axis"><span>{mode === "value" ? fmt(valueMax, 0) : `${(momMax * 100).toFixed(1)}%`}</span><span>{mode === "value" ? fmt(valueMax / 2, 0) : `${(momMax * 50).toFixed(1)}%`}</span><span>0</span></div><div className="dw-bars">{series.map((item, index) => { const mom = materialMom(series, index); const chartValue = mode === "value" ? (item.value ?? 0) / valueMax : Math.abs(mom ?? 0) / momMax; const isNegative = (mom ?? 0) < 0; const unavailable = mode === "value" ? item.value == null : mom == null; return <button className={item.period === activePeriod ? "active" : ""} key={item.period} onClick={() => onPeriod(item.period)}><span className={mode === "mom" ? (isNegative ? "mom-negative" : "mom-positive") : ""}>{unavailable ? "—" : mode === "value" ? fmt(item.value) : signed(mom)}</span><i className={mode === "value" ? "gray" : (isNegative ? "mom-negative" : "mom-positive")} style={{ height: `${unavailable ? 0 : Math.max(chartValue * 100, 3)}%` }} /><small>{shortPeriod(item.period)}</small></button>; })}</div></div><div className="dw-material-note">仅拆分原始数据中可确认的材料类型，未标注月份显示“—”</div></section>;
+}
+
 export function LithiumDashboard() {
   const [categoryKey, setCategoryKey] = useState("battery");
   const [period, setPeriod] = useState(data.meta.latestPeriod);
@@ -50,6 +74,8 @@ export function LithiumDashboard() {
   const allLatest = data.categories.map((item) => ({ ...item, latest: item.totals.find((value) => value.period === period) ?? item.totals.at(-1)! }));
   const composition = category.companies.map((company) => ({ name: company.name, value: valueAt(company, period)?.value ?? 0 })).sort((a, b) => b.value - a.value);
   const compositionTotal = composition.reduce((sum, item) => sum + item.value, 0) || 1;
+  const ternarySeries = selectedCompany.values.filter((value) => periods.includes(value.period)).map((value) => ({ period: value.period, value: materialValue(selectedCompany, value, "ternary") }));
+  const lfpSeries = selectedCompany.values.filter((value) => periods.includes(value.period)).map((value) => ({ period: value.period, value: materialValue(selectedCompany, value, "lfp") }));
   const selectCategory = (key: string) => { setCategoryKey(key); setSelectedCompanyName(""); setLineFocusPeriod(""); };
   const selectCompany = (name: string, nextPeriod?: string) => { setSelectedCompanyName(name); if (nextPeriod) setPeriod(nextPeriod); };
 
@@ -85,6 +111,8 @@ export function LithiumDashboard() {
         <section className="dw-card dw-trend"><div className="dw-card-head"><b>{category.name}总量趋势</b><span>{category.unit}</span></div><div className="dw-bar-chart"><div className="dw-y-axis"><span>{fmt(maxTotal, 0)}</span><span>{fmt(maxTotal / 2, 0)}</span><span>0</span></div><div className="dw-bars">{recentTotals.map((item, index) => { const rawHeight = mode === "value" ? ((item.value ?? 0) / maxTotal) * 100 : Math.min(Math.abs(item.mom ?? 0) * 300, 100); return <button className={item.period === period ? "active" : ""} key={item.period} onClick={() => setPeriod(item.period)}><span>{mode === "value" ? fmt(item.value) : signed(item.mom)}</span><i className={index % 2 ? "navy" : "gray"} style={{ height: `${Math.max(rawHeight, 3)}%` }} /><small>{shortPeriod(item.period)}</small></button>; })}</div></div></section>
 
         <section className="dw-card dw-lines"><div className="dw-card-head"><b>{category.name}企业横向对比</b><span>{category.unit}</span></div><div className="dw-legend">{category.companies.map((company, index) => <button className={selectedCompany.name === company.name ? "active" : ""} key={company.name} onClick={() => selectCompany(company.name)}><i style={{ background: palette[index % palette.length] }} />{company.name}</button>)}</div><div className="dw-line-chart"><svg viewBox="0 0 760 182" role="img" aria-label={`${category.name}企业横向对比`}>{[0, 1, 2, 3].map((step) => { const y = 150 - step * 37.33; return <g key={step}><line x1="42" y1={y} x2="718" y2={y} /><text x="34" y={y + 3} textAnchor="end">{fmt((companyMax * step) / 3, 0)}</text></g>; })}{category.companies.map((company, index) => <g key={company.name} onClick={() => selectCompany(company.name)}><polyline points={points(company, companyMax)} fill="none" stroke={palette[index % palette.length]} strokeWidth={selectedCompany.name === company.name ? 2.5 : 1.4} opacity={selectedCompany.name === company.name ? 1 : .78} />{periods.map((item, pointIndex) => { const p = point(valueAt(company, item)?.value ?? 0, companyMax, pointIndex, periods.length); return <circle key={item} cx={p.x} cy={p.y} r={selectedCompany.name === company.name ? 3 : 2} fill={palette[index % palette.length]} onClick={(event) => { event.stopPropagation(); setLineFocusPeriod(item); setPeriod(item); }} />; })}</g>)}{periods.map((item, index) => <text key={item} x={point(0, companyMax, index, periods.length).x} y="172" textAnchor="middle">{shortPeriod(item)}</text>)}</svg></div>{lineFocusPeriod && <div className="dw-tooltip"><div><b>{periodLabel(lineFocusPeriod)}</b><button onClick={() => setLineFocusPeriod("")}>×</button></div>{category.companies.map((company, index) => <p key={company.name}><i style={{ background: palette[index % palette.length] }} />{company.name}<strong>{fmt(valueAt(company, lineFocusPeriod)?.value)}</strong></p>)}</div>}</section>
+
+        {category.key === "cathode" && <><MaterialPanel title={`${selectedCompany.name} · 三元材料`} series={ternarySeries} mode={mode} activePeriod={period} onPeriod={setPeriod} /><MaterialPanel title={`${selectedCompany.name} · 磷酸铁锂`} series={lfpSeries} mode={mode} activePeriod={period} onPeriod={setPeriod} /></>}
 
         <section className="dw-card dw-company"><div className="dw-card-head"><b>{selectedCompany.name}{mode === "value" ? "纵向产量" : "纵向环比"}</b><span>{mode === "value" ? category.unit : "%"}</span></div><div className="dw-company-chart"><div className="dw-y-axis"><span>{mode === "value" ? fmt(selectedMax, 0) : `${(selectedMomMax * 100).toFixed(1)}%`}</span><span>{mode === "value" ? fmt(selectedMax / 2, 0) : `${(selectedMomMax * 50).toFixed(1)}%`}</span><span>0</span></div><div className="dw-bars">{selectedCompany.values.filter((value) => periods.includes(value.period)).map((value) => { const mom = momAt(selectedCompany, value.period); const chartValue = mode === "value" ? (value.value ?? 0) / selectedMax : Math.abs(mom ?? 0) / selectedMomMax; const isNegative = (mom ?? 0) < 0; return <button className={value.period === period ? "active" : ""} key={value.period} onClick={() => setPeriod(value.period)}><span className={mode === "mom" ? (isNegative ? "mom-negative" : "mom-positive") : ""}>{mode === "value" ? fmt(value.value) : signed(mom)}</span><i className={mode === "value" ? "gray" : (isNegative ? "mom-negative" : "mom-positive")} style={{ height: `${Math.max(chartValue * 100, 3)}%` }} /><small>{shortPeriod(value.period)}</small></button>; })}</div></div></section>
 
