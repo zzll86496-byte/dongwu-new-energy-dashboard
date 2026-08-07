@@ -1,16 +1,38 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const title = "东吴电新｜锂电产业链排产数据库";
-const description = "基于企业排产数据的锂电产业链可视化看板，包含原始排产、趋势、环比和企业结构。";
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
-export async function generateMetadata(): Promise<Metadata> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost";
-  const protocol = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  const image = `${protocol}://${host}/og.png`;
-  return { title, description, openGraph: { title, description, type: "website", locale: "zh_CN", images: [{ url: image, width: 1672, height: 943 }] }, twitter: { card: "summary_large_image", title, description, images: [image] } };
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "储能电池产业链数据库",
+  description: "基于鑫椤锂电数据的储能电池价格、产能、产量、开工率与出货量数据库。",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+      </body>
+    </html>
+  );
 }
-
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="zh-CN"><body>{children}</body></html>; }
