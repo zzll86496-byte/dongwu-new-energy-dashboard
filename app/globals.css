@@ -116,6 +116,13 @@ button,select,input{font:inherit}button{color:inherit}main{max-width:1560px;marg
 .card-titlebar b{font-size:9px;font-weight:800}.card-titlebar span{color:#687885;font-size:7px}
 .dashboard-card{border-color:#d2d8dc}
 @media(max-width:1180px) and (min-width:761px){.planning-layout{grid-template-columns:145px minmax(0,1fr)}.planning-sidebar{padding-left:10px;padding-right:10px}.planning-main{padding-left:14px;padding-right:14px}.planning-grid{gap:8px}}
+@media(min-width:761px){
+  .line-card .line-chart svg{height:220px}
+  .company-card .company-chart{height:230px;overflow:visible}
+  .company-card .company-bars{overflow:visible}
+  .company-card .company-bar{height:calc(100% - 24px)}
+  .company-card .company-bar small{display:block;overflow:visible;max-width:none;font-size:8px}
+}
 
 /* Research workspace home */
 .workbench-shell{min-height:100vh;display:grid;grid-template-columns:232px 1fr;background:#f3f7fc;color:#173a70;font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif}
