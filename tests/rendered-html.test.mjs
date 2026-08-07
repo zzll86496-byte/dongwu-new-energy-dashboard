@@ -32,7 +32,7 @@ test("renders the dense reference-style planning modules", async () => {
   const html = await response.text();
   assert.match(html, /总量趋势/);
   assert.match(html, /企业横向对比/);
-  assert.match(html, /纵向数据/);
+  assert.match(html, /纵向产量/);
   assert.match(html, /企业结构/);
   assert.match(html, /原始数据/);
   assert.match(html, /点击企业或单元格可联动图表/);
