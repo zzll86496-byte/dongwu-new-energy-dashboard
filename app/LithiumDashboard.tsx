@@ -10,7 +10,7 @@ type DataSet = { meta: { title: string; latestPeriod: string; source: string; di
 
 const data = rawData as DataSet;
 const periods = data.periods.slice(-12);
-const palette = ["#9aa6b7", "#8052e8", "#2d6fe7", "#1c9b57", "#d18d12", "#ff514e", "#0e416f", "#a69a5d"];
+const palette = ["#9aa6b7", "#8052e8", "#2d6fe7", "#1c9b57", "#d18d12", "#ff514e", "#173e69", "#a99b5a"];
 const T = {
   brand: "\u4e1c\u5434\u7535\u65b0", title: "\u9502\u7535\u4ea7\u4e1a\u94fe\u6392\u4ea7\u6570\u636e\u5e93", month: "\u5206\u6790\u6708\u4efd", segment: "\u4ea7\u4e1a\u73af\u8282", raw: "\u539f\u59cb\u6570\u636e", company: "\u4f01\u4e1a", search: "\u641c\u7d22\u4f01\u4e1a", clear: "\u6e05\u9664", trend: "\u603b\u91cf\u8d8b\u52bf", line: "\u4f01\u4e1a\u6a2a\u5411\u5bf9\u6bd4", vertical: "\u516c\u53f8\u7eb5\u5411\u6570\u636e", value: "\u4ea7\u91cf", mom: "\u73af\u6bd4", structure: "\u4f01\u4e1a\u7ed3\u6784", observe: "\u73af\u6bd4\u89c2\u5bdf", selected: "\u5f53\u524d\u4f01\u4e1a", update: "\u6700\u540e\u66f4\u65b0", interaction: "\u4ea4\u4e92\u65b9\u5f0f", interactionDesc: "\u70b9\u51fb\u4f01\u4e1a\u884c\u3001\u6298\u7ebf\u6216\u56fe\u4f8b\uff0c\u53ef\u8054\u52a8\u516c\u53f8\u7eb5\u5411\u67f1\u72b6\u56fe\u3002"
 };
@@ -33,12 +33,11 @@ function linePoints(company: Company, max: number) {
 export function LithiumDashboard() {
   const [categoryKey, setCategoryKey] = useState("battery");
   const [period, setPeriod] = useState(data.meta.latestPeriod);
-  const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"value" | "mom">("value");
   const [selectedCompanyName, setSelectedCompanyName] = useState("");
   const category = data.categories.find((item) => item.key === categoryKey) ?? data.categories[0];
   const selectedTotal = category.totals.find((value) => value.period === period) ?? category.totals.at(-1)!;
-  const rows = useMemo(() => category.companies.filter((company) => !search || company.name.includes(search.trim())), [category, search]);
+  const rows = useMemo(() => category.companies, [category]);
   const selectedCompany = category.companies.find((company) => company.name === selectedCompanyName) ?? rows[0] ?? category.companies[0];
   const recentTotals = category.totals.filter((value) => periods.includes(value.period));
   const maxTotal = Math.max(...recentTotals.map((value) => value.value ?? 0), 1);
@@ -54,8 +53,8 @@ export function LithiumDashboard() {
         <div className="sidebar-brand"><div className="sidebar-logo">{T.brand.slice(0, 2)}</div><div><strong>{T.brand}</strong><small>NEW ENERGY DATA</small></div></div>
         <div className="sidebar-rule" />
         <div className="sidebar-block"><label>{T.month}</label><select value={period} onChange={(event) => setPeriod(event.target.value)}>{data.periods.map((item) => <option key={item}>{item}</option>)}</select></div>
-        <div className="sidebar-block"><label>{T.segment}</label><div className="segment-buttons">{data.categories.map((item) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => { setCategoryKey(item.key); setSelectedCompanyName(""); }}><i style={{ background: item.color || palette[2] }} />{item.name}</button>)}</div></div>
-        <div className="sidebar-block"><label>{T.company}</label><div className="sidebar-search"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={T.search} /><button onClick={() => setSearch("")}>{T.clear}</button></div></div>
+        <div className="sidebar-block"><label>{T.segment}</label><div className="segment-buttons">{data.categories.map((item, index) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => { setCategoryKey(item.key); setSelectedCompanyName(""); }}><i style={{ background: palette[index % palette.length] }} />{item.name}</button>)}</div></div>
+        <div className="sidebar-block company-picker"><label>{T.company}</label><select className="company-select" value={selectedCompany.name} onChange={(event) => selectCompany(event.target.value)}>{category.companies.map((company) => <option key={company.name} value={company.name}>{company.name}</option>)}</select><div className="company-list">{category.companies.map((company, index) => <button className={selectedCompany.name === company.name ? "active" : ""} key={company.name} onClick={() => selectCompany(company.name)}><i style={{ background: palette[index % palette.length] }} /><span>{company.name}</span><b>{signed(valueAt(company, period)?.mom)}</b></button>)}</div></div>
         <div className="sidebar-block selected-summary"><label>{T.selected}</label><strong>{selectedCompany.name}</strong><span>{category.name} · {period}</span><b className={valueAt(selectedCompany, period)?.mom != null && (valueAt(selectedCompany, period)?.mom ?? 0) < 0 ? "negative-text" : "positive-text"}>{signed(valueAt(selectedCompany, period)?.mom)}</b></div>
         <div className="sidebar-help"><b>{T.interaction}</b><p>{T.interactionDesc}</p></div>
         <div className="sidebar-foot">{T.update}：2026-08-05<br />{data.meta.source}</div>
