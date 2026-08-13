@@ -176,6 +176,45 @@ function CompanyPicker({ companies, selected, onChange }: { companies: string[];
   return <div className="company-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选择企业</span><strong>{selected.length} / 6</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业" autoFocus /><div>{visible.map(name => <label key={name}><input type="checkbox" checked={selected.includes(name)} disabled={!selected.includes(name) && selected.length >= 6} onChange={() => toggle(name)} /><span>{name}</span></label>)}</div></div>}</div>;
 }
 
+function ModelSparkline({ periods, values, label }: { periods: string[]; values: number[]; label: string }) {
+  const width = 520;
+  const height = 72;
+  const top = 7;
+  const bottom = 15;
+  const max = Math.max(...values, 1);
+  const points = values.map((value, index) => `${6 + index / Math.max(values.length - 1, 1) * (width - 12)},${top + (max - value) / max * (height - top - bottom)}`).join(" ");
+  return <div className="model-sparkline">
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${label}历史销量折线图`}>
+      <line x1="6" x2={width - 6} y1={height - bottom} y2={height - bottom} />
+      <polyline points={points} fill="none" stroke={palette[0]} strokeWidth="2.4" vectorEffect="non-scaling-stroke" />
+      {values.map((value, index) => <circle key={index} cx={6 + index / Math.max(values.length - 1, 1) * (width - 12)} cy={top + (max - value) / max * (height - top - bottom)} r="2.2" fill={palette[1]}><title>{`${periods[index]} · ${value.toLocaleString("zh-CN")}辆`}</title></circle>)}
+    </svg>
+    <small><span>{periods[0]}</span><span>{periods[periods.length - 1]}</span></small>
+  </div>;
+}
+
+function RetailCompanyModelHistory({ modelData }: { modelData: ModelData }) {
+  const companies = useMemo(() => Array.from(new Set(modelData.records.map(record => record.company))).sort((a, b) => a.localeCompare(b, "zh-CN")), [modelData]);
+  const defaultCompany = companies.includes("北京奔驰") ? "北京奔驰" : companies[0] || "";
+  const [company, setCompany] = useState(defaultCompany);
+  const companyRecords = useMemo(() => modelData.records.filter(record => record.company === company), [company, modelData]);
+  const firstDataIndex = Math.max(modelData.periods.findIndex((_, index) => companyRecords.some(record => Math.abs(record.values[index] || 0) > 1e-12)), 0);
+  const [startIndex, setStartIndex] = useState(firstDataIndex);
+  const [endIndex, setEndIndex] = useState(modelData.periods.length - 1);
+  useEffect(() => {
+    setStartIndex(firstDataIndex);
+    setEndIndex(modelData.periods.length - 1);
+  }, [company, firstDataIndex, modelData.periods.length]);
+  const periods = modelData.periods.slice(startIndex, endIndex + 1);
+  const rows = companyRecords.slice().sort((a, b) => a.fuel.localeCompare(b.fuel, "zh-CN") || a.subtype.localeCompare(b.subtype, "zh-CN") || sum(b.values.slice(startIndex, endIndex + 1)) - sum(a.values.slice(startIndex, endIndex + 1)));
+  const categoryCount = new Set(rows.map(record => `${record.fuel}-${record.subtype}`)).size;
+  return <article className="sales-panel company-model-history">
+    <header><div><span>单车企车型历史</span><h2>{company} · 全部车型销量趋势</h2></div><div className="company-model-controls"><label>车企<select aria-label="选择零售车企" value={company} onChange={event => setCompany(event.target.value)}>{companies.map(name => <option key={name} value={name}>{name}</option>)}</select></label><label>起始<select aria-label={`${company}车型趋势起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${company}车型趋势结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
+    <div className="company-model-summary"><span><b>{rows.length}</b> 款车型</span><span><b>{categoryCount}</b> 个动力类别</span><span>{periods[0]} 至 {periods[periods.length - 1]}</span></div>
+    <div className="company-model-table-wrap"><table><colgroup><col className="fuel-column" /><col className="subtype-column" /><col className="model-column" /><col className="trend-column" /><col className="value-column" /><col className="total-column" /></colgroup><thead><tr><th>动力类型</th><th>新能源细分</th><th>车型</th><th>历史销量折线</th><th>期末销量</th><th>区间累计</th></tr></thead><tbody>{rows.map((record, index) => { const values = record.values.slice(startIndex, endIndex + 1); return <tr key={`${record.fuel}-${record.subtype}-${record.model}-${index}`}><td><span className="model-type-tag">{record.fuel}</span></td><td>{record.subtype}</td><td><strong>{record.model}</strong></td><td><ModelSparkline periods={periods} values={values} label={`${company}${record.model}`} /></td><td><b>{(values[values.length - 1] || 0).toLocaleString("zh-CN")}</b><small>辆</small></td><td><b>{sum(values).toLocaleString("zh-CN")}</b><small>辆</small></td></tr>; })}</tbody></table></div>
+  </article>;
+}
+
 function ModelCoreSpotlight({ scope }: { scope: Scope }) {
   const modelData = data.models[scope];
   const companies = useMemo(() => aggregateCompanies(modelData), [modelData]);
@@ -194,11 +233,12 @@ function ModelCoreSpotlight({ scope }: { scope: Scope }) {
   const selectedSeries = companies.filter(item => selected.includes(item.name));
   const trendPeriods = modelData.periods.slice(trendStart, trendEnd + 1);
   return <section className="core-model-section">
-    <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>分车型【{scope === "wholesale" ? "批发" : "零售"}】核心图表</h2><p>同一时间点的企业横向对比，以及不同车企的历史销量趋势；最多选择 6 家企业同图分析。</p></div><div className="core-model-actions"><strong>2<small>张核心图</small></strong><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div></header>
+    <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>分车型【{scope === "wholesale" ? "批发" : "零售"}】核心图表</h2><p>{scope === "retail" ? "车企横向对比、多车企历史趋势，以及单一车企旗下全部车型走势。" : "同一时间点的企业横向对比，以及不同车企的历史销量趋势；最多选择 6 家企业同图分析。"}</p></div><div className="core-model-actions"><strong>{scope === "retail" ? 3 : 2}<small>张核心图</small></strong><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div></header>
     <div className="core-model-grid">
       <article className="sales-panel"><header><div><span>时间点横向对比</span><h2>{modelData.periods[rankingIndex]} 车企销量排名</h2></div><label className="core-single-period">时间<select value={rankingIndex} onChange={event => setRankingIndex(Number(event.target.value))}>{modelData.periods.map((period, index) => <option key={period} value={index}>{period}</option>)}</select></label></header><SnapshotBars percent={false} rows={latestRanking.slice(0, 15).map(item => ({ name: item.name, value: item.values[rankingIndex] }))} /></article>
       <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><label>起始<select value={trendStart} onChange={event => { const next = Number(event.target.value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }}>{modelData.periods.map((period, index) => <option key={`model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select value={trendEnd} onChange={event => { const next = Number(event.target.value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }}>{modelData.periods.map((period, index) => <option key={`model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} /></article>
     </div>
+    {scope === "retail" && <RetailCompanyModelHistory modelData={modelData} />}
   </section>;
 }
 
