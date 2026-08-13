@@ -186,15 +186,15 @@ function CompanyPicker({ companies, selected, onChange }: { companies: string[];
 
 function ModelPicker({ options, selected, onChange }: { options: { key: string; label: string; detail: string }[]; selected: string[]; onChange: (value: string[]) => void }) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const maxSelected = 8;
-  const visible = options.filter(option => `${option.label} ${option.detail}`.toLowerCase().includes(query.toLowerCase()));
   const toggle = (key: string) => {
     if (selected.includes(key)) {
       if (selected.length > 1) onChange(selected.filter(item => item !== key));
     } else if (selected.length < maxSelected) onChange([...selected, key]);
   };
-  return <div className="company-picker model-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选车型</span><strong>{selected.length} / {maxSelected}</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索车型" autoFocus /><div>{visible.map(option => <label key={option.key}><input type="checkbox" checked={selected.includes(option.key)} disabled={!selected.includes(option.key) && selected.length >= maxSelected} onChange={() => toggle(option.key)} /><span><b>{option.label}</b><small>{option.detail}</small></span></label>)}</div></div>}</div>;
+  const selectedOption = options.find(option => option.key === selected[0]);
+  const triggerLabel = selected.length === 1 ? selectedOption?.label || "选择车型" : `已选 ${selected.length} 款车型`;
+  return <div className="company-picker model-picker"><button className="picker-trigger model-picker-trigger" aria-expanded={open} onClick={() => setOpen(!open)}><span>{triggerLabel}</span></button>{open && <div className="model-select-menu" role="listbox" aria-label="选择车型" aria-multiselectable="true">{options.map(option => { const active = selected.includes(option.key); return <button type="button" role="option" aria-selected={active} title={option.detail} key={option.key} className={active ? "selected" : ""} disabled={!active && selected.length >= maxSelected} onClick={() => toggle(option.key)}>{option.label}</button>; })}</div>}</div>;
 }
 
 function RetailCompanyModelHistory({ modelData }: { modelData: ModelData }) {
