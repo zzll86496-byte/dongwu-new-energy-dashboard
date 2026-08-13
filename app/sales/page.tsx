@@ -61,12 +61,13 @@ function lastCoreValue(values: (number | null)[]) {
 }
 
 function CoreChartFigure({ chart }: { chart: CoreChart }) {
-  const [startIndex, setStartIndex] = useState(0);
+  const meaningfulStartIndex = Math.max(chart.categories.findIndex((_, index) => chart.series.some(series => !series.percent && series.values[index] !== null && Math.abs(series.values[index] as number) > 1e-12)), 0);
+  const [startIndex, setStartIndex] = useState(meaningfulStartIndex);
   const [endIndex, setEndIndex] = useState(Math.max(chart.categories.length - 1, 0));
   useEffect(() => {
-    setStartIndex(0);
+    setStartIndex(meaningfulStartIndex);
     setEndIndex(Math.max(chart.categories.length - 1, 0));
-  }, [chart.id, chart.categories.length]);
+  }, [chart.id, chart.categories.length, meaningfulStartIndex]);
   const categories = chart.categories.slice(startIndex, endIndex + 1);
   const shownSeries = chart.series.map(series => ({ ...series, values: series.values.slice(startIndex, endIndex + 1) }));
   const width = 760;
@@ -115,14 +116,14 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
 
 function CoreChartGallery({ boardKey }: { boardKey: SheetKey }) {
   const charts = coreCharts.filter(chart => chart.module === boardKey);
-  const categories = ["全部", ...Array.from(new Set(charts.map(chart => chart.category)))];
-  const [category, setCategory] = useState("全部");
-  useEffect(() => setCategory("全部"), [boardKey]);
+  const categories = Array.from(new Set(charts.map(chart => chart.category)));
+  const [category, setCategory] = useState("");
+  useEffect(() => setCategory(""), [boardKey]);
   if (!charts.length) return null;
-  const visible = category === "全部" ? charts : charts.filter(chart => chart.category === category);
+  const visible = category ? charts.filter(chart => chart.category === category) : charts;
   return <section className="core-chart-section">
     <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>销量长图核心图表</h2><p>按原长图口径重绘，保留月度量、同比、环比、渗透率及多车型趋势。</p></div><strong>{charts.length}<small>张核心图</small></strong></header>
-    {categories.length > 2 && <div className="core-category-tabs">{categories.map(item => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}</div>}
+    {categories.length > 1 && <div className="core-category-tabs">{categories.map(item => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(category === item ? "" : item)}>{item}</button>)}</div>}
     <div className="core-chart-grid">{visible.map(chart => <CoreChartFigure key={chart.id} chart={chart} />)}</div>
   </section>;
 }
