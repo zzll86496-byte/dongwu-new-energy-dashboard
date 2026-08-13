@@ -27,26 +27,32 @@ const formatPeriod = (value: string) => `${value.slice(2, 4)}/${value.slice(5)}`
 const pct = (value: number) => `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
 const volume = (value: number) => (value / 10000).toLocaleString("zh-CN", { maximumFractionDigits: 1 });
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
-
-function linePoints(values: number[], width: number, height: number, max: number, min = 0) {
-  const span = Math.max(max - min, 1);
-  return values.map((value, index) => `${40 + index / Math.max(values.length - 1, 1) * (width - 58)},${14 + (max - value) / span * (height - 44)}`).join(" ");
-}
+const modelRecordKey = (record: ModelRecord) => `${record.fuel}|${record.subtype}|${record.model}`;
 
 function LineChart({ periods, series, percent = false, vehicles = false }: { periods: string[]; series: { name: string; values: number[]; color: string }[]; percent?: boolean; vehicles?: boolean }) {
   const width = 960;
-  const height = 310;
+  const height = 340;
+  const left = 50;
+  const right = 18;
+  const top = 16;
+  const bottom = 66;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
   const all = series.flatMap(item => item.values);
   const max = Math.max(...all, percent ? .1 : 1) * 1.08;
   const min = percent ? Math.min(0, ...all) : 0;
+  const span = Math.max(max - min, percent ? .001 : 1);
   const labelIndexes = periods.map((_, index) => index).filter(index => index === 0 || index === periods.length - 1 || index % Math.max(1, Math.floor(periods.length / 6)) === 0);
+  const x = (index: number) => left + index / Math.max(periods.length - 1, 1) * plotWidth;
+  const y = (value: number) => top + (max - value) / span * plotHeight;
   return <div className="sales-line-chart">
     <div className="sales-legend">{series.map(item => <span key={item.name}><i style={{ background: item.color }} />{item.name}</span>)}</div>
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="销量时间序列">
-      {[0, 1, 2, 3, 4].map(tick => { const y = 14 + tick / 4 * (height - 44); const value = max - tick / 4 * (max - min); return <g key={tick}><line x1="40" x2={width - 18} y1={y} y2={y} /><text x="35" y={y + 4}>{percent ? `${(value * 100).toFixed(0)}%` : vehicles ? Math.round(value).toLocaleString("zh-CN") : `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`}</text></g>; })}
-      {series.map(item => <polyline key={item.name} points={linePoints(item.values, width, height, max, min)} fill="none" stroke={item.color} strokeWidth="3" vectorEffect="non-scaling-stroke" />)}
-      {series.map(item => item.values.map((value, index) => index === item.values.length - 1 ? <circle key={item.name + index} cx={width - 18} cy={14 + (max - value) / Math.max(max - min, 1) * (height - 44)} r="4" fill={item.color} /> : null))}
-      {labelIndexes.map(index => <text className="x-label" key={index} x={40 + index / Math.max(periods.length - 1, 1) * (width - 58)} y={height - 7}>{formatPeriod(periods[index])}</text>)}
+      {[0, 1, 2, 3, 4].map(tick => { const gridY = top + tick / 4 * plotHeight; const value = max - tick / 4 * (max - min); return <g key={tick}><line className="chart-gridline" x1={left} x2={width - right} y1={gridY} y2={gridY} /><text x={left - 10} y={gridY + 4}>{percent ? `${(value * 100).toFixed(0)}%` : vehicles ? Math.round(value).toLocaleString("zh-CN") : `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`}</text></g>; })}
+      <line className="chart-axis-line" x1={left} x2={left} y1={top} y2={top + plotHeight} />
+      {series.map(item => <polyline className="chart-series-line" key={item.name} points={item.values.map((value, index) => `${x(index)},${y(value)}`).join(" ")} fill="none" stroke={item.color} strokeWidth="3.6" vectorEffect="non-scaling-stroke" />)}
+      {series.flatMap(item => item.values.map((value, index) => <circle className="chart-series-point" key={`${item.name}-${index}`} cx={x(index)} cy={y(value)} r="4.2" fill={item.color} vectorEffect="non-scaling-stroke"><title>{`${item.name} · ${periods[index]} · ${vehicles ? `${value.toLocaleString("zh-CN")}辆` : percent ? `${(value * 100).toFixed(1)}%` : `${volume(value)}万辆`}`}</title></circle>))}
+      {labelIndexes.map(index => <text className="x-label" key={index} x={x(index)} y={height - 14} textAnchor="end" transform={`rotate(-38 ${x(index)} ${height - 14})`}>{formatPeriod(periods[index])}</text>)}
     </svg>
   </div>;
 }
@@ -76,7 +82,7 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
   const left = 48;
   const right = 48;
   const top = 18;
-  const bottom = 38;
+  const bottom = 50;
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const volumeSeries = shownSeries.filter(series => !series.percent);
@@ -103,13 +109,14 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
         const value = volumeMax * (1 - tick / 4);
         return <g key={tick}><line className="core-gridline" x1={left} x2={width - right} y1={y} y2={y} /><text className="core-axis-label" x={left - 7} y={y + 4} textAnchor="end">{value.toFixed(value >= 20 ? 0 : 1)}</text>{percentSeries.length > 0 && <text className="core-axis-label" x={width - right + 7} y={y + 4}>{`${(percentMax - tick / 4 * percentSpan) * 100 | 0}%`}</text>}</g>;
       })}
+      <line className="core-axis-line" x1={left} x2={left} y1={top} y2={top + plotHeight} />
       {barSeries.flatMap((series, seriesIndex) => series.values.map((value, index) => value === null ? null : <rect key={`${series.name}-${index}`} x={x(index) - barWidth * barSeries.length / 2 + seriesIndex * barWidth} y={volumeY(value)} width={Math.max(barWidth - 2, 1)} height={Math.max(top + plotHeight - volumeY(value), 0)} rx="1.5" fill={palette[seriesIndex % palette.length]}><title>{`${categories[index]} · ${series.name}: ${coreValue(value, false, chart.unit)}`}</title></rect>))}
       {shownSeries.filter(series => series.mode === "line").map((series, seriesIndex) => {
         const colorIndex = shownSeries.indexOf(series);
         const points = series.values.map((value, index) => value === null ? null : `${x(index)},${series.percent ? percentY(value) : volumeY(value)}`).filter(Boolean).join(" ");
-        return <g key={`${series.name}-${seriesIndex}`}><polyline points={points} fill="none" stroke={palette[colorIndex % palette.length]} strokeWidth="3" vectorEffect="non-scaling-stroke" />{series.values.map((value, index) => value === null ? null : <circle key={index} cx={x(index)} cy={series.percent ? percentY(value) : volumeY(value)} r="2.5" fill={palette[colorIndex % palette.length]}><title>{`${categories[index]} · ${series.name}: ${coreValue(value, series.percent, chart.unit)}`}</title></circle>)}</g>;
+        return <g key={`${series.name}-${seriesIndex}`}><polyline className="core-series-line" points={points} fill="none" stroke={palette[colorIndex % palette.length]} strokeWidth="3.6" vectorEffect="non-scaling-stroke" />{series.values.map((value, index) => value === null ? null : <circle className="core-series-point" key={index} cx={x(index)} cy={series.percent ? percentY(value) : volumeY(value)} r="3.8" fill={palette[colorIndex % palette.length]} vectorEffect="non-scaling-stroke"><title>{`${categories[index]} · ${series.name}: ${coreValue(value, series.percent, chart.unit)}`}</title></circle>)}</g>;
       })}
-      {categories.map((category, index) => index % labelEvery === 0 || index === categories.length - 1 ? <text key={`${category}-${index}`} className="core-x-label" x={x(index)} y={height - 11} textAnchor="middle">{category}</text> : null)}
+      {categories.map((category, index) => index % labelEvery === 0 || index === categories.length - 1 ? <text key={`${category}-${index}`} className="core-x-label" x={x(index)} y={height - 12} textAnchor="end" transform={`rotate(-38 ${x(index)} ${height - 12})`}>{category}</text> : null)}
     </svg>
     <footer><em>{categories[0]} 至 {categories[categories.length - 1]} · {categories.length}期</em>{shownSeries.map(series => { const value = lastCoreValue(series.values); return value === null ? null : <span key={series.name}><i>{series.name}</i><strong>{coreValue(value, series.percent, chart.unit)}</strong></span>; })}</footer>
   </article>;
@@ -177,26 +184,42 @@ function CompanyPicker({ companies, selected, onChange }: { companies: string[];
   return <div className="company-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选择企业</span><strong>{selected.length} / 6</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业" autoFocus /><div>{visible.map(name => <label key={name}><input type="checkbox" checked={selected.includes(name)} disabled={!selected.includes(name) && selected.length >= 6} onChange={() => toggle(name)} /><span>{name}</span></label>)}</div></div>}</div>;
 }
 
+function ModelPicker({ options, selected, onChange }: { options: { key: string; label: string; detail: string }[]; selected: string[]; onChange: (value: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const maxSelected = 8;
+  const visible = options.filter(option => `${option.label} ${option.detail}`.toLowerCase().includes(query.toLowerCase()));
+  const toggle = (key: string) => {
+    if (selected.includes(key)) {
+      if (selected.length > 1) onChange(selected.filter(item => item !== key));
+    } else if (selected.length < maxSelected) onChange([...selected, key]);
+  };
+  return <div className="company-picker model-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选车型</span><strong>{selected.length} / {maxSelected}</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索车型" autoFocus /><div>{visible.map(option => <label key={option.key}><input type="checkbox" checked={selected.includes(option.key)} disabled={!selected.includes(option.key) && selected.length >= maxSelected} onChange={() => toggle(option.key)} /><span><b>{option.label}</b><small>{option.detail}</small></span></label>)}</div></div>}</div>;
+}
+
 function RetailCompanyModelHistory({ modelData }: { modelData: ModelData }) {
   const companies = useMemo(() => Array.from(new Set(modelData.records.map(record => record.company))).sort((a, b) => a.localeCompare(b, "zh-CN")), [modelData]);
   const defaultCompany = companies.includes("北京奔驰") ? "北京奔驰" : companies[0] || "";
   const [company, setCompany] = useState(defaultCompany);
   const companyRecords = useMemo(() => modelData.records.filter(record => record.company === company), [company, modelData]);
+  const [selectedModels, setSelectedModels] = useState<string[]>(() => modelData.records.filter(record => record.company === defaultCompany).sort((a, b) => sum(b.values.slice(-6)) - sum(a.values.slice(-6))).slice(0, 8).map(modelRecordKey));
   const firstDataIndex = Math.max(modelData.periods.findIndex((_, index) => companyRecords.some(record => Math.abs(record.values[index] || 0) > 1e-12)), 0);
   const [startIndex, setStartIndex] = useState(firstDataIndex);
   const [endIndex, setEndIndex] = useState(modelData.periods.length - 1);
   useEffect(() => {
     setStartIndex(firstDataIndex);
     setEndIndex(modelData.periods.length - 1);
-  }, [company, firstDataIndex, modelData.periods.length]);
+    setSelectedModels(companyRecords.slice().sort((a, b) => sum(b.values.slice(-6)) - sum(a.values.slice(-6))).slice(0, 8).map(modelRecordKey));
+  }, [company, companyRecords, firstDataIndex, modelData.periods.length]);
   const periods = modelData.periods.slice(startIndex, endIndex + 1);
   const rows = companyRecords.slice().sort((a, b) => a.fuel.localeCompare(b.fuel, "zh-CN") || a.subtype.localeCompare(b.subtype, "zh-CN") || sum(b.values.slice(startIndex, endIndex + 1)) - sum(a.values.slice(startIndex, endIndex + 1)));
   const categoryCount = new Set(rows.map(record => `${record.fuel}-${record.subtype}`)).size;
   const modelCounts = rows.reduce((counts, record) => counts.set(record.model, (counts.get(record.model) || 0) + 1), new Map<string, number>());
-  const series = rows.map((record, index) => ({ name: modelCounts.get(record.model)! > 1 ? `${record.model} · ${record.subtype}` : record.model, values: record.values.slice(startIndex, endIndex + 1), color: modelLineColor(index) }));
+  const modelOptions = rows.map(record => ({ key: modelRecordKey(record), label: record.model, detail: record.fuel === record.subtype ? record.fuel : `${record.fuel} · ${record.subtype}` }));
+  const series = rows.filter(record => selectedModels.includes(modelRecordKey(record))).map((record, index) => ({ name: modelCounts.get(record.model)! > 1 ? `${record.model} · ${record.subtype}` : record.model, values: record.values.slice(startIndex, endIndex + 1), color: modelLineColor(index) }));
   return <article className="sales-panel company-model-history">
-    <header><div><span>单车企车型历史</span><h2>{company} · 全部车型销量趋势</h2></div><div className="company-model-controls"><label>车企<select aria-label="选择零售车企" value={company} onChange={event => setCompany(event.target.value)}>{companies.map(name => <option key={name} value={name}>{name}</option>)}</select></label><label>起始<select aria-label={`${company}车型趋势起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${company}车型趋势结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
-    <div className="company-model-summary"><span><b>{rows.length}</b> 款车型</span><span><b>{categoryCount}</b> 个动力类别</span><span>{periods[0]} 至 {periods[periods.length - 1]}</span></div>
+    <header><div><span>单车企车型历史</span><h2>{company} · 车型销量趋势</h2></div><div className="company-model-controls"><label>车企<select aria-label="选择零售车企" value={company} onChange={event => setCompany(event.target.value)}>{companies.map(name => <option key={name} value={name}>{name}</option>)}</select></label><ModelPicker options={modelOptions} selected={selectedModels} onChange={setSelectedModels} /><label>起始<select aria-label={`${company}车型趋势起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${company}车型趋势结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
+    <div className="company-model-summary"><span>已选 <b>{series.length}</b> / {rows.length} 款车型</span><span><b>{categoryCount}</b> 个动力类别</span><span>{periods[0]} 至 {periods[periods.length - 1]}</span></div>
     <div className="company-model-line-chart"><LineChart periods={periods} series={series} vehicles /></div>
   </article>;
 }

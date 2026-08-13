@@ -27,7 +27,10 @@
 .core-chart-legend i.line{height:2px}
 .core-chart-card svg{display:block;width:100%;height:255px;overflow:visible}
 .core-gridline{stroke:#e7ecef;stroke-width:1}
+.core-axis-line{stroke:#aebdca;stroke-width:1.2}
 .core-axis-label,.core-x-label{fill:#7c8991;font-size:9px}
+.core-series-line{stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(23,63,98,.18))}
+.core-series-point{stroke:#fff;stroke-width:2.6px;filter:drop-shadow(0 1px 2px rgba(23,63,98,.28))}
 .core-chart-card>footer{display:flex;gap:7px;overflow:auto;border-top:1px solid #edf0f2;padding:10px 14px;background:#fbfcfc}
 .core-chart-card>footer>em{margin-right:auto;color:#7c8991;font-size:8px;font-style:normal;white-space:nowrap}
 .core-chart-card>footer span{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
@@ -41,10 +44,21 @@
 .company-model-history{margin-top:12px;min-width:0}
 .company-model-history>header{align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
 .company-model-controls{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap}
-.company-model-controls label{display:flex;flex-direction:column;gap:2px;color:#7b878e;font-size:7px;font-weight:600}
+.company-model-controls>label{display:flex;flex-direction:column;gap:2px;color:#7b878e;font-size:7px;font-weight:600}
 .company-model-controls select{min-width:96px;border:1px solid #d2dce2;border-radius:3px;background:#fff;color:#29475a;padding:6px 24px 6px 8px;font-size:9px;outline:none}
-.company-model-controls label:first-child select{min-width:160px}
+.company-model-controls>label:first-child select{min-width:160px}
 .company-model-controls select:focus{border-color:#7692a7;box-shadow:0 0 0 2px rgba(23,63,98,.08)}
+.company-model-controls .model-picker{min-width:145px}
+.company-model-controls .model-picker .picker-trigger{width:100%;padding:6px 8px;background:#fff}
+.model-picker .picker-popover{top:34px;left:auto;right:0;width:270px;padding:7px}
+.model-picker .picker-popover>input{padding:6px 8px;font-size:9px}
+.model-picker .picker-popover>div{max-height:230px;margin-top:4px}
+.model-picker .picker-popover label{display:grid;grid-template-columns:15px minmax(0,1fr);align-items:center;gap:7px;min-height:31px;padding:5px 4px;color:#29475a;font-size:9px;font-weight:400;cursor:pointer}
+.model-picker .picker-popover label:hover{background:#f4f7f8}
+.model-picker .picker-popover label>input{width:14px;height:14px;margin:0}
+.model-picker .picker-popover label>span{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.model-picker .picker-popover label b{overflow:hidden;color:#29475a;font-size:9px;white-space:nowrap;text-overflow:ellipsis}
+.model-picker .picker-popover label small{flex:none;color:#8a969d;font-size:7px;white-space:nowrap}
 .company-model-summary{display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#71808a;font-size:8px}
 .company-model-summary span{padding:5px 8px;border:1px solid #dce3e7;border-radius:3px;background:#f7f9fa}
 .company-model-summary b{color:#173f62;font-size:10px}
@@ -53,6 +67,11 @@
 .company-model-line-chart .sales-legend{position:relative;top:auto;right:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:6px 12px;max-height:94px;margin-bottom:8px;padding:9px 10px;overflow:auto;border:1px solid #dce3e7;border-radius:4px;background:#f7f9fa}
 .company-model-line-chart .sales-legend span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .company-model-line-chart .sales-line-chart svg{height:400px}
+.sales-line-chart svg line.chart-gridline{stroke:#d4dee6;stroke-width:1;stroke-dasharray:none}
+.sales-line-chart svg line.chart-axis-line{stroke:#9fb0bf;stroke-width:1.2;stroke-dasharray:none}
+.sales-line-chart svg .chart-series-line{stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(23,63,98,.2))}
+.sales-line-chart svg .chart-series-point{stroke:#fff;stroke-width:3px;filter:drop-shadow(0 1px 2px rgba(23,63,98,.3))}
+.sales-line-chart svg .x-label{fill:#60758a;font-size:10px}
 
 @media(max-width:1100px){
   .core-chart-grid,.core-model-grid{grid-template-columns:1fr}
@@ -74,8 +93,9 @@
   .core-model-range select{width:100%}
   .company-model-history>header{align-items:flex-start;flex-direction:column}
   .company-model-controls{width:100%}
-  .company-model-controls label{flex:1}
-  .company-model-controls select,.company-model-controls label:first-child select{width:100%;min-width:0}
+  .company-model-controls>label{flex:1}
+  .company-model-controls select,.company-model-controls>label:first-child select{width:100%;min-width:0}
+  .company-model-controls .model-picker{flex:1;min-width:145px}
   .company-model-summary{flex-wrap:wrap}
   .company-model-line-chart .sales-line-chart svg{height:320px}
   .core-chart-card svg{height:220px}
