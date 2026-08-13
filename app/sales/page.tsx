@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dataJson from "./sales-data.json";
+import coreChartsJson from "./core-chart-data.json";
 import "./sales.css";
 import "./raw.css";
 import "./sheets.css";
+import "./core-charts.css";
 
 type Scope = "wholesale" | "retail";
 type SheetKey = "wholesale-industry" | "wholesale-models" | "retail-industry" | "retail-models";
@@ -14,8 +16,11 @@ type ModelData = { periods: string[]; records: ModelRecord[] };
 type TableRow = { row: number; label: string; values: number[] };
 type SourceTable = { title: string; periods: string[]; rows: TableRow[] };
 type SalesData = { updated: string; note: string; industry: Record<Scope, { periods: string[]; series: IndustrySeries }>; models: Record<Scope, ModelData>; tables: Record<Scope, SourceTable[]> };
+type CoreSeries = { name: string; mode: "bar" | "line"; percent: boolean; values: (number | null)[] };
+type CoreChart = { id: string; title: string; module: SheetKey; source: string; unit: string; category: string; categories: string[]; series: CoreSeries[] };
 
 const data = dataJson as SalesData;
+const coreCharts = coreChartsJson as CoreChart[];
 const palette = ["#173f62", "#b29a55", "#2b7b86", "#bd6f35", "#6e7f91", "#7c5f8e"];
 const formatPeriod = (value: string) => `${value.slice(2, 4)}/${value.slice(5)}`;
 const pct = (value: number) => `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
@@ -43,6 +48,75 @@ function LineChart({ periods, series, percent = false }: { periods: string[]; se
       {labelIndexes.map(index => <text className="x-label" key={index} x={40 + index / Math.max(periods.length - 1, 1) * (width - 58)} y={height - 7}>{formatPeriod(periods[index])}</text>)}
     </svg>
   </div>;
+}
+
+function coreValue(value: number, percent: boolean, unit: string) {
+  if (percent) return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(0)}%`;
+  return `${value.toLocaleString("zh-CN", { maximumFractionDigits: 1 })}${unit}`;
+}
+
+function lastCoreValue(values: (number | null)[]) {
+  for (let index = values.length - 1; index >= 0; index -= 1) if (values[index] !== null) return values[index];
+  return null;
+}
+
+function CoreChartFigure({ chart }: { chart: CoreChart }) {
+  const width = 760;
+  const height = 292;
+  const left = 48;
+  const right = 48;
+  const top = 18;
+  const bottom = 38;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
+  const volumeSeries = chart.series.filter(series => !series.percent);
+  const percentSeries = chart.series.filter(series => series.percent);
+  const barSeries = chart.series.filter(series => series.mode === "bar" && !series.percent);
+  const volumeValues = volumeSeries.flatMap(series => series.values.filter((value): value is number => value !== null));
+  const percentValues = percentSeries.flatMap(series => series.values.filter((value): value is number => value !== null));
+  const volumeMax = Math.max(...volumeValues, 1) * 1.12;
+  const percentMin = Math.min(0, ...percentValues);
+  const percentMax = Math.max(.2, ...percentValues);
+  const percentSpan = Math.max(percentMax - percentMin, .1);
+  const step = plotWidth / Math.max(chart.categories.length, 1);
+  const barWidth = Math.min(22, step * .68 / Math.max(barSeries.length, 1));
+  const labelEvery = Math.max(1, Math.ceil(chart.categories.length / 8));
+  const x = (index: number) => left + step * (index + .5);
+  const volumeY = (value: number) => top + (volumeMax - value) / volumeMax * plotHeight;
+  const percentY = (value: number) => top + (percentMax - value) / percentSpan * plotHeight;
+  return <article className="core-chart-card">
+    <header><div><span>{chart.category}</span><h3>{chart.title}</h3></div><b>{chart.source}</b></header>
+    <div className="core-chart-legend">{chart.series.map((series, index) => <span key={`${series.name}-${index}`}><i className={series.mode} style={{ background: palette[index % palette.length] }} />{series.name}</span>)}</div>
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${chart.title}图表`}>
+      {[0, 1, 2, 3, 4].map(tick => {
+        const y = top + tick / 4 * plotHeight;
+        const value = volumeMax * (1 - tick / 4);
+        return <g key={tick}><line className="core-gridline" x1={left} x2={width - right} y1={y} y2={y} /><text className="core-axis-label" x={left - 7} y={y + 4} textAnchor="end">{value.toFixed(value >= 20 ? 0 : 1)}</text>{percentSeries.length > 0 && <text className="core-axis-label" x={width - right + 7} y={y + 4}>{`${(percentMax - tick / 4 * percentSpan) * 100 | 0}%`}</text>}</g>;
+      })}
+      {barSeries.flatMap((series, seriesIndex) => series.values.map((value, index) => value === null ? null : <rect key={`${series.name}-${index}`} x={x(index) - barWidth * barSeries.length / 2 + seriesIndex * barWidth} y={volumeY(value)} width={Math.max(barWidth - 2, 2)} height={Math.max(top + plotHeight - volumeY(value), 0)} rx="1.5" fill={palette[seriesIndex % palette.length]}><title>{`${chart.categories[index]} · ${series.name}: ${coreValue(value, false, chart.unit)}`}</title></rect>))}
+      {chart.series.filter(series => series.mode === "line").map((series, seriesIndex) => {
+        const colorIndex = chart.series.indexOf(series);
+        const points = series.values.map((value, index) => value === null ? null : `${x(index)},${series.percent ? percentY(value) : volumeY(value)}`).filter(Boolean).join(" ");
+        return <g key={`${series.name}-${seriesIndex}`}><polyline points={points} fill="none" stroke={palette[colorIndex % palette.length]} strokeWidth="3" vectorEffect="non-scaling-stroke" />{series.values.map((value, index) => value === null ? null : <circle key={index} cx={x(index)} cy={series.percent ? percentY(value) : volumeY(value)} r="2.5" fill={palette[colorIndex % palette.length]}><title>{`${chart.categories[index]} · ${series.name}: ${coreValue(value, series.percent, chart.unit)}`}</title></circle>)}</g>;
+      })}
+      {chart.categories.map((category, index) => index % labelEvery === 0 || index === chart.categories.length - 1 ? <text key={`${category}-${index}`} className="core-x-label" x={x(index)} y={height - 11} textAnchor="middle">{category}</text> : null)}
+    </svg>
+    <footer>{chart.series.map(series => { const value = lastCoreValue(series.values); return value === null ? null : <span key={series.name}><i>{series.name}</i><strong>{coreValue(value, series.percent, chart.unit)}</strong></span>; })}</footer>
+  </article>;
+}
+
+function CoreChartGallery({ boardKey }: { boardKey: SheetKey }) {
+  const charts = coreCharts.filter(chart => chart.module === boardKey);
+  const categories = ["全部", ...Array.from(new Set(charts.map(chart => chart.category)))];
+  const [category, setCategory] = useState("全部");
+  useEffect(() => setCategory("全部"), [boardKey]);
+  if (!charts.length) return null;
+  const visible = category === "全部" ? charts : charts.filter(chart => chart.category === category);
+  return <section className="core-chart-section">
+    <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>销量长图核心图表</h2><p>按原长图口径重绘，保留月度量、同比、环比、渗透率及多车型趋势。</p></div><strong>{charts.length}<small>张核心图</small></strong></header>
+    {categories.length > 2 && <div className="core-category-tabs">{categories.map(item => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}</div>}
+    <div className="core-chart-grid">{visible.map(chart => <CoreChartFigure key={chart.id} chart={chart} />)}</div>
+  </section>;
 }
 
 function Kpi({ label, value, unit, note, tone }: { label: string; value: string; unit?: string; note: string; tone?: "positive" | "negative" }) {
@@ -91,6 +165,23 @@ function CompanyPicker({ companies, selected, onChange }: { companies: string[];
   const visible = companies.filter(name => name.toLowerCase().includes(query.toLowerCase()));
   const toggle = (name: string) => selected.includes(name) ? onChange(selected.filter(item => item !== name)) : selected.length < 6 && onChange([...selected, name]);
   return <div className="company-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选择企业</span><strong>{selected.length} / 6</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业" autoFocus /><div>{visible.map(name => <label key={name}><input type="checkbox" checked={selected.includes(name)} disabled={!selected.includes(name) && selected.length >= 6} onChange={() => toggle(name)} /><span>{name}</span></label>)}</div></div>}</div>;
+}
+
+function ModelCoreSpotlight({ scope }: { scope: Scope }) {
+  const modelData = data.models[scope];
+  const companies = useMemo(() => aggregateCompanies(modelData), [modelData]);
+  const latestIndex = modelData.periods.length - 1;
+  const latestRanking = companies.slice().sort((a, b) => b.values[latestIndex] - a.values[latestIndex]);
+  const [selected, setSelected] = useState<string[]>([]);
+  useEffect(() => setSelected(latestRanking.slice(0, 6).map(item => item.name)), [scope]);
+  const selectedSeries = companies.filter(item => selected.includes(item.name));
+  return <section className="core-model-section">
+    <header className="core-chart-heading"><div><span>COMPANY & MODEL CORE</span><h2>车企横向对比与历史趋势</h2><p>对应长图中的重点车企与车型明细口径；企业较多时可选择最多 6 家同图分析。</p></div><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></header>
+    <div className="core-model-grid">
+      <article className="sales-panel"><header><div><span>时间点横向对比</span><h2>{data.updated} 车企销量排名</h2></div><small>单位：辆</small></header><SnapshotBars percent={false} rows={latestRanking.slice(0, 15).map(item => ({ name: item.name, value: item.values[latestIndex] }))} /></article>
+      <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><small>已选 {selectedSeries.length} 家</small></header><LineChart periods={modelData.periods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values, color: palette[index % palette.length] }))} /></article>
+    </div>
+  </section>;
 }
 
 function ModelsView({ scope }: { scope: Scope }) {
@@ -229,5 +320,5 @@ export default function SalesPage() {
   ];
   const [sheetKey, setSheetKey] = useState<SheetKey>("wholesale-industry");
   const board = boards.find(item => item.key === sheetKey) || boards[0];
-  return <main className="sales-shell"><aside className="sales-sidebar"><a className="sales-brand" href="/"><span>东吴</span><div><strong>东吴证券</strong><small>SOOCHOW SECURITIES</small></div></a><p>工作表导航</p><nav>{boards.map((item, index) => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}><i>{String(index + 1).padStart(2, "0")}</i><span><b>{item.name}</b><small>{item.detail}</small></span></button>)}</nav><div className="sales-current"><span>CURRENT DATABASE</span><b>国内电动车销量</b><small>4 CORE SHEETS</small></div><a className="back-home" href="/">← 返回数据库总库</a></aside><section className="sales-workspace"><header className="sales-topbar"><div><p>DONGWU NEW ENERGY · VEHICLE SALES</p><h1>{board.name}</h1><span>每个分表均含时间点横向对比、多对象趋势图及完整数据明细</span></div><div className="sales-update"><small>数据更新至</small><strong>{data.updated}</strong><span>来源：乘联会</span></div></header><div className="mobile-view-switch sheet-switch">{boards.map(item => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}>{item.name}</button>)}</div><RawDataView key={sheetKey} scope={board.scope} source={board.source} /><footer>{data.note} · 页面数值按原工作簿当前已填月份展示</footer></section></main>;
+  return <main className="sales-shell"><aside className="sales-sidebar"><a className="sales-brand" href="/"><span>东吴</span><div><strong>东吴证券</strong><small>SOOCHOW SECURITIES</small></div></a><p>工作表导航</p><nav>{boards.map((item, index) => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}><i>{String(index + 1).padStart(2, "0")}</i><span><b>{item.name}</b><small>{item.detail}</small></span></button>)}</nav><div className="sales-current"><span>CURRENT DATABASE</span><b>国内电动车销量</b><small>4 CORE SHEETS</small></div><a className="back-home" href="/">← 返回数据库总库</a></aside><section className="sales-workspace"><header className="sales-topbar"><div><p>DONGWU NEW ENERGY · VEHICLE SALES</p><h1>{board.name}</h1><span>销量长图核心内容、横向对比、多对象趋势图及完整数据明细</span></div><div className="sales-update"><small>长图更新至</small><strong>2026-07</strong><span>明细表最新：{data.updated}</span></div></header><div className="mobile-view-switch sheet-switch">{boards.map(item => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}>{item.name}</button>)}</div><CoreChartGallery boardKey={sheetKey} />{board.source === "models" && <ModelCoreSpotlight key={`core-${sheetKey}`} scope={board.scope} />}<RawDataView key={sheetKey} scope={board.scope} source={board.source} /><footer>{data.note} · 核心长图更新至 2026-07；明细表按各原始工作表当前已填月份展示</footer></section></main>;
 }

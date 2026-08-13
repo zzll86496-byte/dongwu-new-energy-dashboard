@@ -1,0 +1,44 @@
+.core-chart-section,.core-model-section{margin:20px 0 26px}
+.core-chart-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:12px;padding:18px 20px;border:1px solid #d8e0e5;background:linear-gradient(135deg,#fff 0%,#f4f7f8 100%)}
+.core-chart-heading>div>span{color:#b38c2e;font-size:8px;font-weight:800;letter-spacing:1.4px}
+.core-chart-heading h2{margin:4px 0 2px;color:#173f62;font-size:20px;letter-spacing:.2px}
+.core-chart-heading p{margin:0;color:#6f7c84;font-size:11px}
+.core-chart-heading>strong{display:flex;align-items:baseline;gap:7px;color:#173f62;font-family:Georgia,serif;font-size:34px}
+.core-chart-heading>strong small{color:#7e8a91;font-family:inherit;font-size:10px;font-weight:500}
+.core-category-tabs{display:flex;gap:6px;overflow:auto;margin-bottom:12px;padding-bottom:2px}
+.core-category-tabs button{border:1px solid #d7e0e4;background:#fff;color:#65747e;padding:7px 13px;font-size:10px;white-space:nowrap;cursor:pointer}
+.core-category-tabs button.active{border-color:#173f62;background:#173f62;color:#fff}
+.core-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.core-chart-card{min-width:0;border:1px solid #d8e0e5;background:#fff;box-shadow:0 4px 16px rgba(23,63,98,.045)}
+.core-chart-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:15px 17px 7px}
+.core-chart-card>header span{color:#a4873e;font-size:8px;font-weight:800;letter-spacing:1px}
+.core-chart-card>header h3{margin:3px 0 0;color:#173f62;font-size:15px}
+.core-chart-card>header>b{border:1px solid #d8e0e5;color:#667985;padding:4px 7px;font-size:8px;font-weight:600;white-space:nowrap}
+.core-chart-legend{display:flex;flex-wrap:wrap;gap:5px 12px;min-height:20px;padding:0 17px;color:#5e6c75;font-size:8px}
+.core-chart-legend span{display:flex;align-items:center;gap:5px}
+.core-chart-legend i{display:block;width:10px;height:7px;border-radius:1px}
+.core-chart-legend i.line{height:2px}
+.core-chart-card svg{display:block;width:100%;height:255px;overflow:visible}
+.core-gridline{stroke:#e7ecef;stroke-width:1}
+.core-axis-label,.core-x-label{fill:#7c8991;font-size:9px}
+.core-chart-card>footer{display:flex;gap:7px;overflow:auto;border-top:1px solid #edf0f2;padding:10px 14px;background:#fbfcfc}
+.core-chart-card>footer span{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+.core-chart-card>footer i{color:#8b969c;font-size:8px;font-style:normal}
+.core-chart-card>footer strong{color:#233f52;font-size:10px}
+.core-model-section .core-chart-heading{position:relative;z-index:4}
+.core-model-section .company-picker{min-width:180px}
+.core-model-grid{display:grid;grid-template-columns:minmax(310px,.7fr) minmax(0,1.3fr);gap:12px}
+.core-model-grid>.sales-panel{min-width:0}
+
+@media(max-width:1100px){
+  .core-chart-grid,.core-model-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:760px){
+  .core-chart-heading{align-items:flex-start;padding:15px}
+  .core-chart-heading h2{font-size:17px}
+  .core-chart-heading>strong{font-size:26px}
+  .core-chart-heading .company-picker{min-width:130px}
+  .core-chart-card svg{height:220px}
+  .core-chart-card>footer{padding:9px 12px}
+}
