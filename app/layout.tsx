@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "储能电池产业链数据库",
-  description: "基于鑫椤锂电数据的储能电池价格、产能、产量、开工率与出货量数据库。",
+  title: "东吴电新｜数据库入口",
+  description: "东吴电新新能源产业链数据库入口，包含储能电池产业链数据库与锂电产业链排产数据库。",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
