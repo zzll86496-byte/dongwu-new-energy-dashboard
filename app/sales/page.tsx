@@ -22,6 +22,7 @@ type CoreChart = { id: string; title: string; module: SheetKey; source: string; 
 const data = dataJson as SalesData;
 const coreCharts = coreChartsJson as CoreChart[];
 const palette = ["#173f62", "#b29a55", "#2b7b86", "#bd6f35", "#6e7f91", "#7c5f8e"];
+const modelLineColor = (index: number) => index < palette.length ? palette[index] : `hsl(${(205 + index * 137.508) % 360} 48% ${38 + index % 3 * 8}%)`;
 const formatPeriod = (value: string) => `${value.slice(2, 4)}/${value.slice(5)}`;
 const pct = (value: number) => `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
 const volume = (value: number) => (value / 10000).toLocaleString("zh-CN", { maximumFractionDigits: 1 });
@@ -32,7 +33,7 @@ function linePoints(values: number[], width: number, height: number, max: number
   return values.map((value, index) => `${40 + index / Math.max(values.length - 1, 1) * (width - 58)},${14 + (max - value) / span * (height - 44)}`).join(" ");
 }
 
-function LineChart({ periods, series, percent = false }: { periods: string[]; series: { name: string; values: number[]; color: string }[]; percent?: boolean }) {
+function LineChart({ periods, series, percent = false, vehicles = false }: { periods: string[]; series: { name: string; values: number[]; color: string }[]; percent?: boolean; vehicles?: boolean }) {
   const width = 960;
   const height = 310;
   const all = series.flatMap(item => item.values);
@@ -42,7 +43,7 @@ function LineChart({ periods, series, percent = false }: { periods: string[]; se
   return <div className="sales-line-chart">
     <div className="sales-legend">{series.map(item => <span key={item.name}><i style={{ background: item.color }} />{item.name}</span>)}</div>
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="销量时间序列">
-      {[0, 1, 2, 3, 4].map(tick => { const y = 14 + tick / 4 * (height - 44); const value = max - tick / 4 * (max - min); return <g key={tick}><line x1="40" x2={width - 18} y1={y} y2={y} /><text x="35" y={y + 4}>{percent ? `${(value * 100).toFixed(0)}%` : `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`}</text></g>; })}
+      {[0, 1, 2, 3, 4].map(tick => { const y = 14 + tick / 4 * (height - 44); const value = max - tick / 4 * (max - min); return <g key={tick}><line x1="40" x2={width - 18} y1={y} y2={y} /><text x="35" y={y + 4}>{percent ? `${(value * 100).toFixed(0)}%` : vehicles ? Math.round(value).toLocaleString("zh-CN") : `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`}</text></g>; })}
       {series.map(item => <polyline key={item.name} points={linePoints(item.values, width, height, max, min)} fill="none" stroke={item.color} strokeWidth="3" vectorEffect="non-scaling-stroke" />)}
       {series.map(item => item.values.map((value, index) => index === item.values.length - 1 ? <circle key={item.name + index} cx={width - 18} cy={14 + (max - value) / Math.max(max - min, 1) * (height - 44)} r="4" fill={item.color} /> : null))}
       {labelIndexes.map(index => <text className="x-label" key={index} x={40 + index / Math.max(periods.length - 1, 1) * (width - 58)} y={height - 7}>{formatPeriod(periods[index])}</text>)}
@@ -176,23 +177,6 @@ function CompanyPicker({ companies, selected, onChange }: { companies: string[];
   return <div className="company-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选择企业</span><strong>{selected.length} / 6</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业" autoFocus /><div>{visible.map(name => <label key={name}><input type="checkbox" checked={selected.includes(name)} disabled={!selected.includes(name) && selected.length >= 6} onChange={() => toggle(name)} /><span>{name}</span></label>)}</div></div>}</div>;
 }
 
-function ModelSparkline({ periods, values, label }: { periods: string[]; values: number[]; label: string }) {
-  const width = 520;
-  const height = 72;
-  const top = 7;
-  const bottom = 15;
-  const max = Math.max(...values, 1);
-  const points = values.map((value, index) => `${6 + index / Math.max(values.length - 1, 1) * (width - 12)},${top + (max - value) / max * (height - top - bottom)}`).join(" ");
-  return <div className="model-sparkline">
-    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${label}历史销量折线图`}>
-      <line x1="6" x2={width - 6} y1={height - bottom} y2={height - bottom} />
-      <polyline points={points} fill="none" stroke={palette[0]} strokeWidth="2.4" vectorEffect="non-scaling-stroke" />
-      {values.map((value, index) => <circle key={index} cx={6 + index / Math.max(values.length - 1, 1) * (width - 12)} cy={top + (max - value) / max * (height - top - bottom)} r="2.2" fill={palette[1]}><title>{`${periods[index]} · ${value.toLocaleString("zh-CN")}辆`}</title></circle>)}
-    </svg>
-    <small><span>{periods[0]}</span><span>{periods[periods.length - 1]}</span></small>
-  </div>;
-}
-
 function RetailCompanyModelHistory({ modelData }: { modelData: ModelData }) {
   const companies = useMemo(() => Array.from(new Set(modelData.records.map(record => record.company))).sort((a, b) => a.localeCompare(b, "zh-CN")), [modelData]);
   const defaultCompany = companies.includes("北京奔驰") ? "北京奔驰" : companies[0] || "";
@@ -208,10 +192,12 @@ function RetailCompanyModelHistory({ modelData }: { modelData: ModelData }) {
   const periods = modelData.periods.slice(startIndex, endIndex + 1);
   const rows = companyRecords.slice().sort((a, b) => a.fuel.localeCompare(b.fuel, "zh-CN") || a.subtype.localeCompare(b.subtype, "zh-CN") || sum(b.values.slice(startIndex, endIndex + 1)) - sum(a.values.slice(startIndex, endIndex + 1)));
   const categoryCount = new Set(rows.map(record => `${record.fuel}-${record.subtype}`)).size;
+  const modelCounts = rows.reduce((counts, record) => counts.set(record.model, (counts.get(record.model) || 0) + 1), new Map<string, number>());
+  const series = rows.map((record, index) => ({ name: modelCounts.get(record.model)! > 1 ? `${record.model} · ${record.subtype}` : record.model, values: record.values.slice(startIndex, endIndex + 1), color: modelLineColor(index) }));
   return <article className="sales-panel company-model-history">
     <header><div><span>单车企车型历史</span><h2>{company} · 全部车型销量趋势</h2></div><div className="company-model-controls"><label>车企<select aria-label="选择零售车企" value={company} onChange={event => setCompany(event.target.value)}>{companies.map(name => <option key={name} value={name}>{name}</option>)}</select></label><label>起始<select aria-label={`${company}车型趋势起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${company}车型趋势结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
     <div className="company-model-summary"><span><b>{rows.length}</b> 款车型</span><span><b>{categoryCount}</b> 个动力类别</span><span>{periods[0]} 至 {periods[periods.length - 1]}</span></div>
-    <div className="company-model-table-wrap"><table><colgroup><col className="fuel-column" /><col className="subtype-column" /><col className="model-column" /><col className="trend-column" /><col className="value-column" /><col className="total-column" /></colgroup><thead><tr><th>动力类型</th><th>新能源细分</th><th>车型</th><th>历史销量折线</th><th>期末销量</th><th>区间累计</th></tr></thead><tbody>{rows.map((record, index) => { const values = record.values.slice(startIndex, endIndex + 1); return <tr key={`${record.fuel}-${record.subtype}-${record.model}-${index}`}><td><span className="model-type-tag">{record.fuel}</span></td><td>{record.subtype}</td><td><strong>{record.model}</strong></td><td><ModelSparkline periods={periods} values={values} label={`${company}${record.model}`} /></td><td><b>{(values[values.length - 1] || 0).toLocaleString("zh-CN")}</b><small>辆</small></td><td><b>{sum(values).toLocaleString("zh-CN")}</b><small>辆</small></td></tr>; })}</tbody></table></div>
+    <div className="company-model-line-chart"><LineChart periods={periods} series={series} vehicles /></div>
   </article>;
 }
 
