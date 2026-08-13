@@ -5,6 +5,9 @@
 .core-chart-heading p{margin:0;color:#6f7c84;font-size:11px}
 .core-chart-heading>strong{display:flex;align-items:baseline;gap:7px;color:#173f62;font-family:Georgia,serif;font-size:34px}
 .core-chart-heading>strong small{color:#7e8a91;font-family:inherit;font-size:10px;font-weight:500}
+.core-model-actions{display:flex;align-items:center;gap:15px}
+.core-model-actions>strong{display:flex;align-items:baseline;gap:6px;color:#173f62;font-family:Georgia,serif;font-size:30px;white-space:nowrap}
+.core-model-actions>strong small{color:#7e8a91;font-family:inherit;font-size:9px;font-weight:500}
 .core-category-tabs{display:flex;gap:6px;overflow:auto;margin-bottom:12px;padding-bottom:2px}
 .core-category-tabs button{border:1px solid #d7e0e4;background:#fff;color:#65747e;padding:7px 13px;font-size:10px;white-space:nowrap;cursor:pointer}
 .core-category-tabs button.active{border-color:#173f62;background:#173f62;color:#fff}
@@ -38,6 +41,8 @@
   .core-chart-heading{align-items:flex-start;padding:15px}
   .core-chart-heading h2{font-size:17px}
   .core-chart-heading>strong{font-size:26px}
+  .core-model-actions{align-items:flex-end;flex-direction:column;gap:7px}
+  .core-model-actions>strong{font-size:24px}
   .core-chart-heading .company-picker{min-width:130px}
   .core-chart-card svg{height:220px}
   .core-chart-card>footer{padding:9px 12px}
