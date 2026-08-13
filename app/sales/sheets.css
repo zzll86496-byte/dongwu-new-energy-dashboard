@@ -1,0 +1,9 @@
+.source-title{min-width:175px}
+.source-title span,.source-title strong{display:block}
+.source-title span{color:#8a969d;font-size:7px;letter-spacing:.6px}
+.source-title strong{margin-top:3px;color:#183d57;font-size:13px}
+
+@media(max-width:760px){
+  .mobile-view-switch.sheet-switch{overflow:auto}
+  .mobile-view-switch.sheet-switch button{min-width:125px;white-space:nowrap}
+}

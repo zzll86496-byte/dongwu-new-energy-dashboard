@@ -4,13 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import dataJson from "./sales-data.json";
 import "./sales.css";
 import "./raw.css";
+import "./sheets.css";
 
 type Scope = "wholesale" | "retail";
-type View = "industry" | "models" | "tables";
+type SheetKey = "wholesale-industry" | "wholesale-models" | "retail-industry" | "retail-models";
 type IndustrySeries = Record<string, number[]>;
 type ModelRecord = { company: string; fuel: string; subtype: string; model: string; values: number[] };
 type ModelData = { periods: string[]; records: ModelRecord[] };
-type SourceTable = { title: string; periods: string[]; rows: { row: number; label: string; values: number[] }[] };
+type TableRow = { row: number; label: string; values: number[] };
+type SourceTable = { title: string; periods: string[]; rows: TableRow[] };
 type SalesData = { updated: string; note: string; industry: Record<Scope, { periods: string[]; series: IndustrySeries }>; models: Record<Scope, ModelData>; tables: Record<Scope, SourceTable[]> };
 
 const data = dataJson as SalesData;
@@ -118,33 +120,114 @@ function ModelsView({ scope }: { scope: Scope }) {
   </>;
 }
 
-function RawDataView({ scope }: { scope: Scope }) {
-  const [source, setSource] = useState<"industry" | "models">("industry");
+type AnalysisRow = { id: string; name: string; values: number[] };
+type MetricKind = "销量/规模" | "同比" | "环比" | "占比/渗透率";
+
+function rowMetric(label: string): MetricKind {
+  if (label.includes("占比") || label.includes("渗透率")) return "占比/渗透率";
+  if (label.includes("同比")) return "同比";
+  if (label.includes("环比")) return "环比";
+  return "销量/规模";
+}
+
+function analysisName(label: string, sectionTitle: string) {
+  let name = label.replace(/\s*\/\s*(当月同比|单月环比|累计同比|同比|环比|占比|渗透率|纯电动占比)$/u, "").replace(/-(占比)$/u, "");
+  if (["车企批发表现", "纯电动分品牌", "插混分品牌"].includes(sectionTitle)) name = name.split(" / ")[0];
+  return name;
+}
+
+function formatAnalysisValue(value: number, percent: boolean) {
+  return percent
+    ? `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`
+    : value.toLocaleString("zh-CN", { maximumFractionDigits: 1 });
+}
+
+function SnapshotBars({ rows, percent }: { rows: { name: string; value: number }[]; percent: boolean }) {
+  const ranked = rows.filter(row => row.value !== 0).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 15).sort((a, b) => b.value - a.value);
+  const max = Math.max(...ranked.map(row => Math.abs(row.value)), 1);
+  if (!ranked.length) return <div className="analysis-empty">该月份暂无可比较数据</div>;
+  return <div className="snapshot-bars">{ranked.map((row, index) => <div key={`${row.name}-${index}`}><span title={row.name}>{row.name}</span><i><b className={row.value < 0 ? "negative" : ""} style={{ width: `${Math.abs(row.value) / max * 100}%` }} /></i><strong>{formatAnalysisValue(row.value, percent)}</strong></div>)}</div>;
+}
+
+function DualAnalysis({ title, periods, rows, metricLabel, percent = false, resetKey }: { title: string; periods: string[]; rows: AnalysisRow[]; metricLabel: string; percent?: boolean; resetKey: string }) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [periodIndex, setPeriodIndex] = useState(Math.max(periods.length - 1, 0));
+  const [windowSize, setWindowSize] = useState<12 | 24 | 0>(24);
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    const latest = Math.max(periods.length - 1, 0);
+    const defaults = rows.slice().sort((a, b) => Math.abs(b.values[latest] || 0) - Math.abs(a.values[latest] || 0)).slice(0, 6).map(row => row.id);
+    setSelectedIds(defaults);
+    setPeriodIndex(latest);
+    setQuery("");
+  }, [resetKey]);
+  const toggle = (id: string) => selectedIds.includes(id) ? setSelectedIds(selectedIds.filter(item => item !== id)) : selectedIds.length < 8 && setSelectedIds([...selectedIds, id]);
+  const filtered = rows.filter(row => row.name.toLowerCase().includes(query.toLowerCase()));
+  const selectedRows = rows.filter(row => selectedIds.includes(row.id));
+  const start = windowSize ? Math.max(0, periods.length - windowSize) : 0;
+  return <section className="dual-analysis">
+    <aside className="analysis-controls"><header><span>分析对象</span><strong>{title}</strong><small>趋势图最多同时选择 8 项</small></header><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业、品牌或数据项" /><div className="analysis-options">{filtered.map(row => <label key={row.id}><input type="checkbox" checked={selectedIds.includes(row.id)} disabled={!selectedIds.includes(row.id) && selectedIds.length >= 8} onChange={() => toggle(row.id)} /><span>{row.name}</span></label>)}</div></aside>
+    <article className="sales-panel snapshot-panel"><header><div><span>时间点横向对比</span><h2>{periods[periodIndex]} · 已选 {selectedRows.length} 项</h2></div><select value={periodIndex} onChange={event => setPeriodIndex(Number(event.target.value))}>{periods.map((period, index) => <option key={period} value={index}>{period}</option>)}</select></header><SnapshotBars percent={percent} rows={selectedRows.map(row => ({ name: row.name, value: row.values[periodIndex] || 0 }))} /><p className="analysis-note">左侧选择的对象同时作用于横向对比图和趋势图；当前指标：{metricLabel}。</p></article>
+    <article className="sales-panel multi-trend-panel"><header><div><span>多对象时间趋势</span><h2>{selectedRows.length} 项同图 · {metricLabel}</h2></div><div className="range-switch"><button className={windowSize === 12 ? "active" : ""} onClick={() => setWindowSize(12)}>近12月</button><button className={windowSize === 24 ? "active" : ""} onClick={() => setWindowSize(24)}>近24月</button><button className={windowSize === 0 ? "active" : ""} onClick={() => setWindowSize(0)}>全部</button></div></header><LineChart periods={periods.slice(start)} percent={percent} series={selectedRows.map((row, index) => ({ name: row.name, values: row.values.slice(start), color: palette[index % palette.length] }))} /></article>
+  </section>;
+}
+
+function SectionAnalysis({ section }: { section: SourceTable }) {
+  const metrics = ["销量/规模", "同比", "环比", "占比/渗透率"].filter(metric => section.rows.some(row => rowMetric(row.label) === metric)) as MetricKind[];
+  const [metric, setMetric] = useState<MetricKind>(metrics[0] || "销量/规模");
+  useEffect(() => { setMetric(metrics[0] || "销量/规模"); }, [section.title]);
+  const rows = section.rows.filter(row => rowMetric(row.label) === metric).map(row => ({ id: String(row.row), name: analysisName(row.label, section.title), values: row.values }));
+  return <><div className="metric-toolbar"><div><span>当前分表</span><strong>{section.title}</strong><small>{rows.length} 个可比较对象</small></div><label>分析指标<select value={metric} onChange={event => setMetric(event.target.value as MetricKind)}>{metrics.map(item => <option key={item}>{item}</option>)}</select></label><p>每个分表均提供同一月份的横向对比，以及多个对象的历史趋势同图。</p></div><DualAnalysis title={section.title} periods={section.periods} rows={rows} metricLabel={metric} percent={metric !== "销量/规模"} resetKey={`${section.title}-${metric}`} /></>;
+}
+
+function aggregateModelRows(modelData: ModelData, dimension: "company" | "model" | "fuel" | "subtype") {
+  const map = new Map<string, number[]>();
+  modelData.records.forEach(record => {
+    const key = record[dimension] || "未分类";
+    const values = map.get(key) || Array(modelData.periods.length).fill(0);
+    record.values.forEach((value, index) => { values[index] += value; });
+    map.set(key, values);
+  });
+  return [...map.entries()].map(([name, values]) => ({ id: name, name, values }));
+}
+
+function ModelSourceAnalysis({ modelData, scope }: { modelData: ModelData; scope: Scope }) {
+  const [dimension, setDimension] = useState<"company" | "model" | "fuel" | "subtype">("company");
+  useEffect(() => { setDimension("company"); }, [scope]);
+  const labels = { company: "企业", model: "车型", fuel: "燃料类型", subtype: "新能源细分" };
+  const rows = aggregateModelRows(modelData, dimension);
+  return <><div className="metric-toolbar"><div><span>当前分表</span><strong>分车型【{scope === "wholesale" ? "批发" : "零售"}】</strong><small>{modelData.records.length} 条车型明细</small></div><label>分析层级<select value={dimension} onChange={event => setDimension(event.target.value as typeof dimension)}>{Object.entries(labels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><p>可按企业、车型、动力类型或新能源细分汇总，并生成横向和纵向两类图表。</p></div><DualAnalysis title={labels[dimension]} periods={modelData.periods} rows={rows} metricLabel="销量" resetKey={`${scope}-${dimension}`} /></>;
+}
+
+function RawDataView({ scope, source }: { scope: Scope; source: "industry" | "models" }) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [query, setQuery] = useState("");
-  const [windowSize, setWindowSize] = useState<12 | 24 | 0>(12);
-  const [selectedRow, setSelectedRow] = useState(0);
+  const [tableWindow, setTableWindow] = useState<12 | 24 | 0>(12);
   const [page, setPage] = useState(0);
   const sections = data.tables[scope];
   const section = sections[Math.min(sectionIndex, sections.length - 1)];
-  const start = windowSize ? Math.max(0, section.periods.length - windowSize) : 0;
+  const start = tableWindow ? Math.max(0, section.periods.length - tableWindow) : 0;
   const visibleRows = section.rows.filter(row => row.label.toLowerCase().includes(query.toLowerCase()));
-  const activeRow = visibleRows[Math.min(selectedRow, Math.max(visibleRows.length - 1, 0))];
   const modelData = data.models[scope];
   const modelRows = modelData.records.filter(record => `${record.company} ${record.fuel} ${record.subtype} ${record.model}`.toLowerCase().includes(query.toLowerCase()));
   const pageSize = 60;
   const pageCount = Math.max(1, Math.ceil(modelRows.length / pageSize));
-  useEffect(() => { setSectionIndex(0); setSelectedRow(0); setPage(0); }, [scope]);
-  useEffect(() => { setSelectedRow(0); setPage(0); }, [query, source, sectionIndex]);
+  useEffect(() => { setSectionIndex(0); setPage(0); }, [scope]);
+  useEffect(() => { setPage(0); }, [query, source, sectionIndex]);
   return <>
-    <section className="source-toolbar"><div className="source-switch"><button className={source === "industry" ? "active" : ""} onClick={() => setSource("industry")}>乘联会【{scope === "wholesale" ? "批发" : "零售"}】</button><button className={source === "models" ? "active" : ""} onClick={() => setSource("models")}>分车型【{scope === "wholesale" ? "批发" : "零售"}】</button></div><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索数据项、企业或车型" /><span>{source === "industry" ? `${sections.length} 个数据分表 · ${section.rows.length} 行` : `${modelData.records.length} 条车型记录`}</span></section>
-    {source === "industry" ? <section className="raw-layout"><aside className="raw-section-list"><header><span>SHEET TABLES</span><strong>数据分表</strong></header>{sections.map((item, index) => <button key={item.title} className={index === sectionIndex ? "active" : ""} onClick={() => { setSectionIndex(index); setSelectedRow(0); }}><i>{String(index + 1).padStart(2, "0")}</i><span>{item.title}</span><b>{item.rows.length}</b></button>)}</aside><div className="raw-content"><article className="sales-panel raw-chart-panel"><header><div><span>{section.title}</span><h2>{activeRow?.label || "选择数据项"}</h2></div><div className="range-switch"><button className={windowSize === 12 ? "active" : ""} onClick={() => setWindowSize(12)}>近12月</button><button className={windowSize === 24 ? "active" : ""} onClick={() => setWindowSize(24)}>近24月</button><button className={windowSize === 0 ? "active" : ""} onClick={() => setWindowSize(0)}>全部</button></div></header>{activeRow && <LineChart periods={section.periods.slice(start)} series={[{ name: activeRow.label, values: activeRow.values.slice(start), color: palette[0] }]} />}</article><article className="sales-panel raw-table-panel"><header><div><span>完整分表</span><h2>{section.title}</h2></div><small>点击任一行可查看纵向趋势</small></header><div className="raw-table-wrap"><table><thead><tr><th>原表行</th><th>数据项</th>{section.periods.slice(start).map(period => <th key={period}>{formatPeriod(period)}</th>)}</tr></thead><tbody>{visibleRows.map((row, index) => <tr key={row.row} className={activeRow?.row === row.row ? "active" : ""} onClick={() => setSelectedRow(index)}><td>{row.row}</td><td>{row.label}</td>{row.values.slice(start).map((value, valueIndex) => <td key={valueIndex}>{value.toLocaleString("zh-CN", { maximumFractionDigits: 2 })}</td>)}</tr>)}</tbody></table></div></article></div></section> : <section className="sales-panel full-model-table"><header><div><span>完整车型明细</span><h2>企业 × 动力类型 × 车型 × 月度销量</h2></div><small>第 {Math.min(page + 1, pageCount)} / {pageCount} 页 · 共 {modelRows.length} 条</small></header><div className="raw-table-wrap"><table><thead><tr><th>企业</th><th>燃料类型</th><th>新能源细分</th><th>标准车型</th>{modelData.periods.map(period => <th key={period}>{formatPeriod(period)}</th>)}</tr></thead><tbody>{modelRows.slice(page * pageSize, page * pageSize + pageSize).map((record, index) => <tr key={`${record.company}-${record.model}-${index}`}><td>{record.company}</td><td>{record.fuel}</td><td>{record.subtype}</td><td>{record.model}</td>{record.values.map((value, valueIndex) => <td key={valueIndex}>{value.toLocaleString("zh-CN")}</td>)}</tr>)}</tbody></table></div><div className="pager"><button disabled={page === 0} onClick={() => setPage(Math.max(0, page - 1))}>上一页</button><span>{page + 1} / {pageCount}</span><button disabled={page >= pageCount - 1} onClick={() => setPage(Math.min(pageCount - 1, page + 1))}>下一页</button></div></section>}
+    <section className="source-toolbar"><div className="source-title"><span>CURRENT SHEET</span><strong>{source === "industry" ? "乘联会" : "分车型"}【{scope === "wholesale" ? "批发" : "零售"}】</strong></div><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索数据项、企业或车型" /><span>{source === "industry" ? `${sections.length} 个数据分表 · ${section.rows.length} 行` : `${modelData.records.length} 条车型记录`}</span></section>
+    {source === "industry" ? <section className="raw-layout"><aside className="raw-section-list"><header><span>SHEET TABLES</span><strong>数据分表</strong></header>{sections.map((item, index) => <button key={item.title} className={index === sectionIndex ? "active" : ""} onClick={() => setSectionIndex(index)}><i>{String(index + 1).padStart(2, "0")}</i><span>{item.title}</span><b>{item.rows.length}</b></button>)}</aside><div className="raw-content"><SectionAnalysis key={`${scope}-${section.title}`} section={section} /><article className="sales-panel raw-table-panel"><header><div><span>完整分表</span><h2>{section.title}</h2></div><div className="range-switch"><button className={tableWindow === 12 ? "active" : ""} onClick={() => setTableWindow(12)}>近12月</button><button className={tableWindow === 24 ? "active" : ""} onClick={() => setTableWindow(24)}>近24月</button><button className={tableWindow === 0 ? "active" : ""} onClick={() => setTableWindow(0)}>全部</button></div></header><div className="raw-table-wrap"><table><thead><tr><th>原表行</th><th>数据项</th>{section.periods.slice(start).map(period => <th key={period}>{formatPeriod(period)}</th>)}</tr></thead><tbody>{visibleRows.map(row => <tr key={row.row}><td>{row.row}</td><td>{row.label}</td>{row.values.slice(start).map((value, valueIndex) => <td key={valueIndex}>{value.toLocaleString("zh-CN", { maximumFractionDigits: 2 })}</td>)}</tr>)}</tbody></table></div></article></div></section> : <><ModelSourceAnalysis modelData={modelData} scope={scope} /><section className="sales-panel full-model-table"><header><div><span>完整车型明细</span><h2>企业 × 动力类型 × 车型 × 月度销量</h2></div><small>第 {Math.min(page + 1, pageCount)} / {pageCount} 页 · 共 {modelRows.length} 条</small></header><div className="raw-table-wrap"><table><thead><tr><th>企业</th><th>燃料类型</th><th>新能源细分</th><th>标准车型</th>{modelData.periods.map(period => <th key={period}>{formatPeriod(period)}</th>)}</tr></thead><tbody>{modelRows.slice(page * pageSize, page * pageSize + pageSize).map((record, index) => <tr key={`${record.company}-${record.model}-${index}`}><td>{record.company}</td><td>{record.fuel}</td><td>{record.subtype}</td><td>{record.model}</td>{record.values.map((value, valueIndex) => <td key={valueIndex}>{value.toLocaleString("zh-CN")}</td>)}</tr>)}</tbody></table></div><div className="pager"><button disabled={page === 0} onClick={() => setPage(Math.max(0, page - 1))}>上一页</button><span>{page + 1} / {pageCount}</span><button disabled={page >= pageCount - 1} onClick={() => setPage(Math.min(pageCount - 1, page + 1))}>下一页</button></div></section></>}
   </>;
 }
 
 export default function SalesPage() {
-  const [scope, setScope] = useState<Scope>("wholesale");
-  const [view, setView] = useState<View>("industry");
-  const subtitle = view === "industry" ? "乘联会行业口径与动力结构" : view === "models" ? "企业横向对比与车型纵向趋势" : "四个核心 Sheet 的完整分表与明细查询";
-  return <main className="sales-shell"><aside className="sales-sidebar"><a className="sales-brand" href="/"><span>东吴</span><div><strong>东吴证券</strong><small>SOOCHOW SECURITIES</small></div></a><p>销量数据库</p><nav><button className={view === "industry" ? "active" : ""} onClick={() => setView("industry")}><i>01</i><span><b>乘联会</b><small>行业口径 · 总量趋势</small></span></button><button className={view === "models" ? "active" : ""} onClick={() => setView("models")}><i>02</i><span><b>分车型</b><small>企业选择 · 车型下钻</small></span></button><button className={view === "tables" ? "active" : ""} onClick={() => setView("tables")}><i>03</i><span><b>全部分表</b><small>完整数据 · 搜索查询</small></span></button></nav><div className="sales-current"><span>CURRENT DATABASE</span><b>国内电动车销量</b><small>WHOLESALE · RETAIL</small></div><a className="back-home" href="/">← 返回数据库总库</a></aside><section className="sales-workspace"><header className="sales-topbar"><div><p>DONGWU NEW ENERGY · VEHICLE SALES</p><h1>国内电动车销量数据库</h1><span>{subtitle}</span></div><div className="scope-switch"><button className={scope === "wholesale" ? "active" : ""} onClick={() => setScope("wholesale")}>批发</button><button className={scope === "retail" ? "active" : ""} onClick={() => setScope("retail")}>零售</button></div><div className="sales-update"><small>数据更新至</small><strong>{data.updated}</strong><span>来源：乘联会</span></div></header><div className="mobile-view-switch"><button className={view === "industry" ? "active" : ""} onClick={() => setView("industry")}>乘联会</button><button className={view === "models" ? "active" : ""} onClick={() => setView("models")}>分车型</button><button className={view === "tables" ? "active" : ""} onClick={() => setView("tables")}>全部分表</button></div>{view === "industry" ? <IndustryView scope={scope} /> : view === "models" ? <ModelsView scope={scope} /> : <RawDataView scope={scope} />}<footer>{data.note} · 页面数值按原工作簿当前已填月份展示</footer></section></main>;
+  const boards: { key: SheetKey; scope: Scope; source: "industry" | "models"; name: string; detail: string }[] = [
+    { key: "wholesale-industry", scope: "wholesale", source: "industry", name: "乘联会【批发】", detail: "7个分表 · 全口径分析" },
+    { key: "wholesale-models", scope: "wholesale", source: "models", name: "分车型【批发】", detail: "企业 · 车型 · 动力" },
+    { key: "retail-industry", scope: "retail", source: "industry", name: "乘联会【零售】", detail: "2个分表 · 全口径分析" },
+    { key: "retail-models", scope: "retail", source: "models", name: "分车型【零售】", detail: "企业 · 车型 · 动力" },
+  ];
+  const [sheetKey, setSheetKey] = useState<SheetKey>("wholesale-industry");
+  const board = boards.find(item => item.key === sheetKey) || boards[0];
+  return <main className="sales-shell"><aside className="sales-sidebar"><a className="sales-brand" href="/"><span>东吴</span><div><strong>东吴证券</strong><small>SOOCHOW SECURITIES</small></div></a><p>工作表导航</p><nav>{boards.map((item, index) => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}><i>{String(index + 1).padStart(2, "0")}</i><span><b>{item.name}</b><small>{item.detail}</small></span></button>)}</nav><div className="sales-current"><span>CURRENT DATABASE</span><b>国内电动车销量</b><small>4 CORE SHEETS</small></div><a className="back-home" href="/">← 返回数据库总库</a></aside><section className="sales-workspace"><header className="sales-topbar"><div><p>DONGWU NEW ENERGY · VEHICLE SALES</p><h1>{board.name}</h1><span>每个分表均含时间点横向对比、多对象趋势图及完整数据明细</span></div><div className="sales-update"><small>数据更新至</small><strong>{data.updated}</strong><span>来源：乘联会</span></div></header><div className="mobile-view-switch sheet-switch">{boards.map(item => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}>{item.name}</button>)}</div><RawDataView key={sheetKey} scope={board.scope} source={board.source} /><footer>{data.note} · 页面数值按原工作簿当前已填月份展示</footer></section></main>;
 }
