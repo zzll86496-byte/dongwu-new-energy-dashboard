@@ -20,7 +20,7 @@ const data = dashboardData as unknown as DashboardData;
 type Module = "总览" | "价格" | "产能" | "产量" | "开工率" | "出货量";
 type ChartLine = { name: string; points: Point[]; color: string };
 
-const COLORS = ["#173f62", "#a18b4e", "#c17632", "#4e7b65"];
+const COLORS = ["#00215D", "#A9974F", "#F47A2A", "#2B7A66", "#007BC5", "#7F8B97"];
 const lastNumber = (points: Point[]) => [...points].reverse().find((point) => point[1] !== null)?.[1] ?? 0;
 const sum = (points: Point[], prefix?: string) => points.reduce((total, point) => total + ((prefix && !point[0].startsWith(prefix)) || point[1] === null ? 0 : point[1]), 0);
 const fmt = (value: number, digits = 1) => value.toLocaleString("zh-CN", { minimumFractionDigits: digits, maximumFractionDigits: digits });

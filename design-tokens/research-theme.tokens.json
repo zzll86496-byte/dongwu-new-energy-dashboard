@@ -1,0 +1,56 @@
+{
+  "$schema": "https://www.designtokens.org/tr/drafts/format/",
+  "primitive": {
+    "color": {
+      "navy900": { "$type": "color", "$value": "#00215D" },
+      "blue600": { "$type": "color", "$value": "#007BC5" },
+      "ink700": { "$type": "color", "$value": "#17365D" },
+      "orange500": { "$type": "color", "$value": "#F47A2A" },
+      "gold500": { "$type": "color", "$value": "#A9974F" },
+      "green600": { "$type": "color", "$value": "#2B7A66" },
+      "slate500": { "$type": "color", "$value": "#7F8B97" },
+      "blue300": { "$type": "color", "$value": "#8FB9D1" },
+      "canvas": { "$type": "color", "$value": "#F3F6F8" },
+      "paper": { "$type": "color", "$value": "#FFFFFF" },
+      "line": { "$type": "color", "$value": "#D7E1EA" }
+    },
+    "space": {
+      "1": { "$type": "dimension", "$value": "4px" },
+      "2": { "$type": "dimension", "$value": "8px" },
+      "3": { "$type": "dimension", "$value": "12px" },
+      "4": { "$type": "dimension", "$value": "16px" },
+      "5": { "$type": "dimension", "$value": "24px" }
+    },
+    "radius": {
+      "control": { "$type": "dimension", "$value": "4px" },
+      "panel": { "$type": "dimension", "$value": "4px" }
+    },
+    "motion": {
+      "fast": { "$type": "duration", "$value": "150ms" }
+    }
+  },
+  "semantic": {
+    "color": {
+      "action": { "$type": "color", "$value": "{primitive.color.navy900}" },
+      "focus": { "$type": "color", "$value": "{primitive.color.blue600}" },
+      "text": { "$type": "color", "$value": "{primitive.color.ink700}" },
+      "positive": { "$type": "color", "$value": "{primitive.color.orange500}" },
+      "negative": { "$type": "color", "$value": "{primitive.color.green600}" },
+      "comparison": { "$type": "color", "$value": "{primitive.color.gold500}" },
+      "muted": { "$type": "color", "$value": "{primitive.color.slate500}" },
+      "workspace": { "$type": "color", "$value": "{primitive.color.canvas}" },
+      "surface": { "$type": "color", "$value": "{primitive.color.paper}" },
+      "border": { "$type": "color", "$value": "{primitive.color.line}" }
+    }
+  },
+  "component": {
+    "control": {
+      "height": { "$type": "dimension", "$value": "32px" },
+      "radius": { "$type": "dimension", "$value": "{primitive.radius.control}" }
+    },
+    "panel": {
+      "radius": { "$type": "dimension", "$value": "{primitive.radius.panel}" },
+      "shadow": { "$type": "shadow", "$value": { "color": "#17365D0F", "offsetX": "0px", "offsetY": "1px", "blur": "4px", "spread": "0px" } }
+    }
+  }
+}

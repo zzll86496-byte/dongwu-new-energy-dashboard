@@ -38,8 +38,8 @@ type HistoryData = {
 
 const historyData = history as HistoryData;
 
-const COLORS = ["#123a63", "#b3a15a", "#778694", "#ee792d", "#8f9092", "#c9ced2"];
-const AREA_COLORS = ["#123a63", "#b3a15a", "#778694", "#8f9092", "#c9ced2", "#dfe3e6"];
+const COLORS = ["#00215D", "#A9974F", "#7F8B97", "#F47A2A", "#007BC5", "#8FB9D1", "#2B7A66"];
+const AREA_COLORS = ["#00215D", "#A9974F", "#7F8B97", "#007BC5", "#8FB9D1", "#D7E1EA"];
 const NAV: { key: PageKey; label: string; note: string }[] = [
   { key: "overview", label: "行业总览", note: "规模与格局" },
   { key: "relations", label: "供应关系", note: "车企 × 电池" },
@@ -405,7 +405,7 @@ function RelationsPage({ snapshot, period }: { snapshot: Snapshot; period: strin
       <Card title="车企 × 电池企业供应份额矩阵" hint="颜色越深，供应份额越高；右侧为车企当月装机" className="span-9 heatmap-card" exportBusy={exporting === "matrix"} onExport={exportSupplyMatrix}>
         <div className="heatmap-scroll"><div className="heatmap" style={{ gridTemplateColumns: `150px repeat(${snapshot.batteryNames.length}, minmax(82px, 1fr)) 76px` }}>
           <div className="hm-head sticky">汽车企业</div>{snapshot.batteryNames.map(n => <div className="hm-head" key={n}>{n}</div>)}<div className="hm-head">GWh</div>
-          {snapshot.heatmap.map(row => <div className="hm-row" key={row.car} style={{ display: "contents" }}><div className="hm-car">{row.car}</div>{row.values.map((v, i) => <div key={i} className="hm-cell" style={{ background: `rgba(18,58,99,${0.07 + v / 115})`, color: v > 55 ? "white" : "#17324d" }}>{v ? `${v}%` : "—"}</div>)}<div className="hm-total">{row.gwh}</div></div>)}
+          {snapshot.heatmap.map(row => <div className="hm-row" key={row.car} style={{ display: "contents" }}><div className="hm-car">{row.car}</div>{row.values.map((v, i) => <div key={i} className="hm-cell" style={{ background: `rgba(0,33,93,${0.06 + v / 120})`, color: v > 55 ? "white" : "#17365D" }}>{v ? `${v}%` : "—"}</div>)}<div className="hm-total">{row.gwh}</div></div>)}
         </div></div>
       </Card>
       <Card title="车企装机排名" hint={periodText(period)} className="span-3" exportBusy={exporting === "carRanking"} onExport={exportCarRanking}>

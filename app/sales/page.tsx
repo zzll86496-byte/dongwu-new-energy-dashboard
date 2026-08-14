@@ -7,6 +7,7 @@ import "./sales.css";
 import "./raw.css";
 import "./sheets.css";
 import "./core-charts.css";
+import "../research-system.css";
 
 type Scope = "wholesale" | "retail";
 type SheetKey = "wholesale-industry" | "wholesale-models" | "retail-industry" | "retail-models";
@@ -21,7 +22,7 @@ type CoreChart = { id: string; title: string; module: SheetKey; source: string; 
 
 const data = dataJson as SalesData;
 const coreCharts = coreChartsJson as CoreChart[];
-const palette = ["#173f62", "#b29a55", "#2b7b86", "#bd6f35", "#6e7f91", "#7c5f8e"];
+const palette = ["#00215D", "#A9974F", "#7F8B97", "#007BC5", "#F47A2A", "#8FB9D1", "#2B7A66"];
 const modelLineColor = (index: number) => index < palette.length ? palette[index] : `hsl(${(205 + index * 137.508) % 360} 48% ${38 + index % 3 * 8}%)`;
 const formatPeriod = (value: string) => `${value.slice(2, 4)}/${value.slice(5)}`;
 const pct = (value: number) => `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
@@ -46,7 +47,7 @@ function LineChart({ periods, series, percent = false, vehicles = false, modelSt
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="销量时间序列">
       {[0, 1, 2, 3, 4].map(tick => { const y = 14 + tick / 4 * (height - 44); const value = max - tick / 4 * (max - min); return <g key={tick}><line x1="40" x2={width - 18} y1={y} y2={y} /><text x="35" y={y + 4}>{percent ? `${(value * 100).toFixed(0)}%` : vehicles ? Math.round(value).toLocaleString("zh-CN") : `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`}</text></g>; })}
       {series.map(item => <polyline key={item.name} points={linePoints(item.values, width, height, max, min)} fill="none" stroke={item.color} strokeWidth={modelStyle ? "2.4" : "3"} vectorEffect="non-scaling-stroke" />)}
-      {series.map(item => item.values.map((value, index) => modelStyle || index === item.values.length - 1 ? <circle key={item.name + index} cx={40 + index / Math.max(item.values.length - 1, 1) * (width - 58)} cy={14 + (max - value) / Math.max(max - min, 1) * (height - 44)} r={modelStyle ? "2.8" : "4"} fill={item.color}><title>{`${item.name} · ${periods[index]} · ${value.toLocaleString("zh-CN")}辆`}</title></circle> : null))}
+      {series.map(item => item.values.map((value, index) => index === item.values.length - 1 ? <circle key={item.name + index} cx={40 + index / Math.max(item.values.length - 1, 1) * (width - 58)} cy={14 + (max - value) / Math.max(max - min, 1) * (height - 44)} r={modelStyle ? "3" : "4"} fill={item.color}><title>{`${item.name} · ${periods[index]} · ${value.toLocaleString("zh-CN")}辆`}</title></circle> : null))}
       {labelIndexes.map(index => <text className="x-label" key={index} x={40 + index / Math.max(periods.length - 1, 1) * (width - 58)} y={height - 7}>{formatPeriod(periods[index])}</text>)}
     </svg>
   </div>;

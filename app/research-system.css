@@ -1,0 +1,620 @@
+:root,
+:host {
+  --dw-primary: #00215d;
+  --dw-current: #007bc5;
+  --dw-ink: #17365d;
+  --dw-update: #f47a2a;
+  --dw-compare: #a9974f;
+  --dw-negative: #2b7a66;
+  --dw-muted: #7f8b97;
+  --dw-soft-blue: #8fb9d1;
+  --dw-workspace: #f3f6f8;
+  --dw-panel: #ffffff;
+  --dw-border: #d7e1ea;
+  --dw-grid: #e3eaf0;
+  --dw-header: #edf4f8;
+  --dw-select: #f7f1df;
+  --dw-hover: #eef6fb;
+  --dw-radius: 4px;
+  --dw-shadow: 0 1px 4px rgba(23, 54, 93, 0.06);
+  --dw-motion: 150ms;
+  --dw-sans: "Source Han Sans CN", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --dw-serif: "Source Han Serif CN", "Noto Serif CJK SC", "Songti SC", SimSun, serif;
+  --dw-number: "IBM Plex Sans Condensed", "DIN Alternate", "Arial Narrow", var(--dw-sans);
+}
+
+.app-shell,
+.planning-shell,
+.export-shell,
+.sales-shell,
+.installation-scope {
+  color: var(--dw-ink);
+  background: var(--dw-workspace);
+  font-family: var(--dw-sans);
+}
+
+.app-shell {
+  --navy: var(--dw-primary);
+  --navy2: var(--dw-primary);
+  --blue: var(--dw-primary);
+  --gold: var(--dw-compare);
+  --orange: var(--dw-update);
+  --paper: var(--dw-workspace);
+  --line: var(--dw-border);
+  --text: var(--dw-ink);
+  --ink: var(--dw-ink);
+  --muted: var(--dw-muted);
+  --bg: var(--dw-workspace);
+  --card: var(--dw-panel);
+  --shadow: var(--dw-shadow);
+}
+
+.planning-shell {
+  --ink: var(--dw-ink);
+  --muted: var(--dw-muted);
+  --line: var(--dw-border);
+  --blue: var(--dw-primary);
+  --green: var(--dw-negative);
+  --paper: var(--dw-workspace);
+  --panel: var(--dw-panel);
+  --shadow: var(--dw-shadow);
+  background-image: none;
+}
+
+.export-shell {
+  --navy: var(--dw-primary);
+  --olive: var(--dw-compare);
+  --gray: var(--dw-muted);
+  --orange: var(--dw-update);
+  --line: var(--dw-border);
+}
+
+.sales-shell {
+  --sales-navy: var(--dw-primary);
+  --sales-blue: var(--dw-primary);
+  --sales-gold: var(--dw-compare);
+  --sales-paper: var(--dw-workspace);
+  --sales-line: var(--dw-border);
+  --sales-text: var(--dw-ink);
+}
+
+.installation-scope {
+  --navy: var(--dw-primary);
+  --navy2: var(--dw-primary);
+  --gold: var(--dw-compare);
+  --orange: var(--dw-update);
+  --ink: var(--dw-ink);
+  --muted: var(--dw-muted);
+  --line: var(--dw-border);
+  --bg: var(--dw-workspace);
+  --card: var(--dw-panel);
+  --shadow: var(--dw-shadow);
+}
+
+.app-shell h1,
+.planning-shell h1,
+.export-shell h1,
+.sales-shell h1,
+.installation-scope h1,
+.app-shell .brand h1 {
+  color: var(--dw-ink);
+  font-family: var(--dw-serif);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.app-shell strong,
+.planning-shell strong,
+.planning-shell .metric-value,
+.export-shell strong,
+.sales-shell strong,
+.installation-scope strong,
+.installation-scope td,
+.installation-scope th,
+.data-table td,
+.data-table th {
+  font-variant-numeric: tabular-nums;
+}
+
+.app-shell button,
+.app-shell select,
+.app-shell input,
+.planning-shell button,
+.planning-shell select,
+.planning-shell input,
+.export-shell button,
+.export-shell select,
+.export-shell input,
+.sales-shell button,
+.sales-shell select,
+.sales-shell input,
+.installation-scope button,
+.installation-scope select,
+.installation-scope input {
+  border-radius: var(--dw-radius);
+  font-family: var(--dw-sans);
+  transition: border-color var(--dw-motion) ease, background-color var(--dw-motion) ease, color var(--dw-motion) ease, box-shadow var(--dw-motion) ease;
+}
+
+.app-shell select,
+.app-shell input,
+.planning-shell select,
+.planning-shell input,
+.export-shell select,
+.export-shell input,
+.sales-shell select,
+.sales-shell input,
+.installation-scope select,
+.installation-scope input,
+.app-shell .chart-export-btn,
+.app-shell .database-chart-export,
+.app-shell .ranking-chart-export,
+.planning-shell .chart-export-button,
+.export-shell .export-head-actions button,
+.sales-shell .pager button {
+  min-height: 32px;
+}
+
+.app-shell button:disabled,
+.planning-shell button:disabled,
+.export-shell button:disabled,
+.sales-shell button:disabled,
+.installation-scope button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.app-shell button:focus-visible,
+.app-shell select:focus-visible,
+.app-shell input:focus-visible,
+.planning-shell button:focus-visible,
+.planning-shell select:focus-visible,
+.planning-shell input:focus-visible,
+.export-shell button:focus-visible,
+.export-shell select:focus-visible,
+.export-shell input:focus-visible,
+.sales-shell button:focus-visible,
+.sales-shell select:focus-visible,
+.sales-shell input:focus-visible,
+.installation-scope button:focus-visible,
+.installation-scope select:focus-visible,
+.installation-scope input:focus-visible,
+.installation-scope [tabindex]:focus-visible {
+  outline: 2px solid var(--dw-current);
+  outline-offset: 2px;
+}
+
+/* Surfaces */
+.app-shell .panel,
+.app-shell .kpi,
+.app-shell .overview-chart-card,
+.app-shell .metric-card,
+.planning-shell .dashboard-card,
+.planning-shell .metric-card,
+.export-shell .export-card,
+.export-shell .export-kpis article,
+.sales-shell .sales-panel,
+.sales-shell .sales-kpi,
+.sales-shell .model-toolbar,
+.sales-shell .core-chart-card,
+.sales-shell .analysis-controls,
+.sales-shell .metric-toolbar,
+.sales-shell .source-toolbar,
+.installation-scope .panel,
+.installation-scope .summary-kpis article,
+.installation-scope .kpi,
+.installation-scope .structure-panel,
+.installation-scope .structure-detail,
+.installation-scope .maker-control-card,
+.installation-scope .market-scope-tabs,
+.installation-scope .company-toolbar {
+  border: 1px solid var(--dw-border);
+  border-radius: var(--dw-radius);
+  background: var(--dw-panel);
+  box-shadow: var(--dw-shadow);
+}
+
+.app-shell .kpi.active,
+.app-shell .metric-card.active,
+.planning-shell .metric-card.active,
+.installation-scope .summary-kpis article:first-child,
+.installation-scope .kpi:first-child {
+  border-bottom: 3px solid var(--dw-primary);
+  box-shadow: var(--dw-shadow);
+}
+
+/* Side navigation */
+.app-shell > .sidebar,
+.planning-shell .planning-sidebar,
+.export-shell .export-sidebar,
+.sales-shell .sales-sidebar,
+.installation-scope .side-panel {
+  color: var(--dw-ink);
+  border-color: var(--dw-border);
+  background: var(--dw-panel);
+  box-shadow: none;
+}
+
+.sales-shell .sales-brand strong,
+.sales-shell .sales-sidebar nav button,
+.sales-shell .sales-current b,
+.sales-shell .back-home {
+  color: var(--dw-ink);
+}
+
+.app-shell > .sidebar .brand strong,
+.app-shell > .sidebar .side-source strong,
+.app-shell > .sidebar .side-bottom b,
+.app-shell > .sidebar nav button,
+.app-shell > .sidebar nav button span small,
+.app-shell > .sidebar nav em {
+  color: var(--dw-ink);
+}
+
+.app-shell > .sidebar .side-label,
+.app-shell > .sidebar .side-source,
+.app-shell > .sidebar .side-bottom {
+  color: var(--dw-muted);
+}
+
+.app-shell > .sidebar .brand,
+.app-shell > .sidebar .side-source {
+  border-color: var(--dw-border);
+}
+
+.app-shell > .sidebar .brand-mark,
+.planning-shell .sidebar-logo,
+.export-shell .export-brand > span,
+.sales-shell .sales-brand > span,
+.installation-scope .side-brand > span {
+  color: #fff;
+  background: var(--dw-primary);
+  box-shadow: none;
+}
+
+.sales-shell .sales-sidebar nav button:hover,
+.sales-shell .sales-sidebar nav button.active,
+.planning-shell .segment-buttons button:hover,
+.planning-shell .segment-buttons button.active,
+.export-shell .export-side-block nav button:hover,
+.export-shell .export-side-block nav button.active,
+.app-shell .sidebar nav button:hover,
+.app-shell .sidebar nav button.active,
+.installation-scope .side-nav button:hover,
+.installation-scope .side-nav button.active {
+  color: var(--dw-primary);
+  background: var(--dw-hover);
+  box-shadow: inset 3px 0 0 var(--dw-current);
+}
+
+.sales-shell .sales-sidebar nav button.active small,
+.sales-shell .sales-sidebar nav small,
+.sales-shell .sales-current span,
+.sales-shell .sales-current small,
+.sales-shell .back-home,
+.installation-scope .side-nav button small {
+  color: var(--dw-muted);
+}
+
+.sales-shell .sales-sidebar nav i,
+.installation-scope .side-nav button > i,
+.app-shell .panel-title > div > span,
+.app-shell .page-title > div:first-child > span,
+.serial {
+  display: none;
+}
+
+/* Active controls */
+.app-shell .chart-mode button.active,
+.planning-shell .mode-switch button.active,
+.planning-shell .line-legend button.active,
+.export-shell .switch button.active,
+.sales-shell .scope-switch button.active,
+.sales-shell .range-switch button.active,
+.sales-shell .mobile-view-switch button.active,
+.sales-shell .core-category-tabs button.active,
+.installation-scope .segmented button.active,
+.installation-scope .chart-type-picker button.active,
+.installation-scope .market-scope-tabs button.active,
+.app-shell .topbar nav button.selected {
+  border-color: var(--dw-primary);
+  color: #fff;
+  background: var(--dw-primary);
+  box-shadow: none;
+}
+
+/* Research-report title rule */
+.app-shell .panel-title,
+.app-shell .panel-head,
+.planning-shell .card-titlebar,
+.export-shell .export-card-head,
+.sales-shell .sales-panel > header,
+.sales-shell .core-chart-card > header,
+.installation-scope .panel-title {
+  position: relative;
+}
+
+.app-shell .panel-title::before,
+.app-shell .panel-head::before,
+.planning-shell .card-titlebar::before,
+.export-shell .export-card-head::before,
+.sales-shell .sales-panel > header::before,
+.sales-shell .core-chart-card > header::before,
+.installation-scope .panel-title::before {
+  content: "";
+  width: 3px;
+  min-width: 3px;
+  height: 16px;
+  align-self: center;
+  background: var(--dw-current);
+}
+
+.installation-scope .panel-title > i {
+  display: none;
+}
+
+/* KPI semantics */
+.positive,
+.positive-text,
+.metric-change,
+.export-shell .positive,
+.sales-shell .positive,
+.installation-scope .kpi em,
+.planning-shell .positive-text {
+  color: var(--dw-update) !important;
+}
+
+.negative,
+.negative-text,
+.metric-change.down,
+.export-shell .negative,
+.sales-shell .negative,
+.planning-shell .negative-text {
+  color: var(--dw-negative) !important;
+}
+
+/* Chart language */
+.app-shell svg line,
+.planning-shell svg line,
+.export-shell svg line,
+.sales-shell svg line,
+.installation-scope svg line {
+  stroke: var(--dw-grid);
+  stroke-dasharray: none;
+  shape-rendering: crispEdges;
+}
+
+.app-shell svg polyline,
+.planning-shell svg polyline,
+.export-shell svg polyline,
+.sales-shell svg polyline,
+.installation-scope svg polyline {
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+}
+
+.app-shell .legend,
+.app-shell .chart-legend,
+.planning-shell .line-legend,
+.planning-shell .component-mom-legend,
+.export-shell .legend-row,
+.sales-shell .sales-legend,
+.sales-shell .core-chart-legend,
+.installation-scope .chart-legend,
+.installation-scope .maker-legend,
+.installation-scope .structure-legend {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.app-shell .rank-bars em,
+.app-shell .rank-bars em i,
+.app-shell .bar-chart i,
+.app-shell .stacked-history > div > div,
+.app-shell .stacked-history i,
+.planning-shell .bar-item > i,
+.planning-shell .company-bar > i,
+.planning-shell .component-mom-column > i,
+.planning-shell .ranking button > i,
+.planning-shell .ranking button > i > b,
+.export-shell .export-ranking > button > i,
+.export-shell .export-ranking > button > i > b,
+.sales-shell .snapshot-bars i,
+.sales-shell .snapshot-bars i b,
+.sales-shell .company-ranking i,
+.sales-shell .company-ranking i b,
+.sales-shell .segment-bars i,
+.sales-shell .segment-bars i b,
+.sales-shell .fuel-bars i,
+.sales-shell .fuel-bars i b,
+.installation-scope .hbar > div,
+.installation-scope .hbar i,
+.installation-scope .year-column i,
+.installation-scope .bar-item,
+.installation-scope .quantity-group > i,
+.installation-scope .combo-bar,
+.installation-scope .maker-bar-plot i {
+  border-radius: 0;
+}
+
+.app-shell .bar-chart > div > span,
+.planning-shell .bar-item > span,
+.planning-shell .company-bar > span,
+.installation-scope .bar-item > b,
+.installation-scope .year-column i > b,
+.installation-scope .quantity-group > i > span {
+  opacity: 0;
+  transition: opacity var(--dw-motion) ease;
+}
+
+.app-shell .bar-chart > div:hover > span,
+.app-shell .bar-chart > div:last-child > span,
+.planning-shell .bar-item:hover > span,
+.planning-shell .bar-item:last-child > span,
+.planning-shell .company-bar:hover > span,
+.planning-shell .company-bar:last-child > span,
+.installation-scope .bar-item:hover > b,
+.installation-scope .year-column:hover i > b,
+.installation-scope .year-column:last-child i > b,
+.installation-scope .quantity-group > i:hover > span {
+  opacity: 1;
+}
+
+.planning-shell .bar-item:last-child > i,
+.planning-shell .company-bar:last-child > i,
+.app-shell .bar-chart > div:last-child > i {
+  background: var(--dw-current) !important;
+}
+
+/* Tables */
+.app-shell table,
+.planning-shell table,
+.export-shell table,
+.sales-shell table,
+.installation-scope table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-shell thead th,
+.planning-shell thead th,
+.export-shell thead th,
+.sales-shell thead th,
+.installation-scope thead th {
+  color: var(--dw-ink);
+  background: var(--dw-header);
+  border-bottom: 1px solid var(--dw-soft-blue);
+}
+
+.app-shell tbody td,
+.app-shell tbody th,
+.planning-shell tbody td,
+.planning-shell tbody th,
+.export-shell tbody td,
+.export-shell tbody th,
+.sales-shell tbody td,
+.sales-shell tbody th,
+.installation-scope tbody td,
+.installation-scope tbody th {
+  border-top: 0;
+  border-right-color: transparent;
+  border-bottom: 1px solid var(--dw-border);
+}
+
+.app-shell tbody tr:hover,
+.planning-shell tbody tr:hover,
+.export-shell tbody tr:hover,
+.sales-shell tbody tr:hover,
+.installation-scope tbody tr:hover {
+  background: var(--dw-hover);
+}
+
+.app-shell tbody tr.selected,
+.planning-shell tbody tr.selected,
+.export-shell tbody tr.selected,
+.sales-shell tbody tr.selected,
+.installation-scope tbody tr.selected {
+  background: var(--dw-select);
+}
+
+/* Remove decorative depth while retaining data-bearing donut gradients. */
+.sales-shell .sales-sidebar,
+.installation-scope,
+.installation-scope .side-panel,
+.installation-scope .workspace,
+.installation-scope .panel,
+.installation-scope .dashboard-panel,
+.installation-scope .summary-kpis article,
+.installation-scope .segmented button,
+.installation-scope .chart-type-picker button,
+.installation-scope .side-current,
+.installation-scope .workspace .meta span {
+  background-image: none;
+}
+
+.sales-shell .core-chart-heading,
+.sales-shell .source-toolbar,
+.sales-shell .metric-toolbar,
+.sales-shell .analysis-controls,
+.sales-shell .raw-section-list {
+  border: 1px solid var(--dw-border);
+  border-radius: var(--dw-radius);
+  background: var(--dw-panel);
+  background-image: none;
+  box-shadow: var(--dw-shadow);
+}
+
+.sales-shell .core-chart-heading::before {
+  content: "";
+  width: 3px;
+  min-width: 3px;
+  align-self: stretch;
+  background: var(--dw-current);
+}
+
+.installation-scope {
+  padding: 0;
+}
+
+.installation-scope .app-frame {
+  width: 100%;
+  min-height: 100vh;
+  gap: 0;
+}
+
+.installation-scope .side-panel,
+.installation-scope .workspace {
+  border-radius: 0;
+}
+
+.app-shell .scatter {
+  background-image: linear-gradient(var(--dw-grid) 1px, transparent 1px), linear-gradient(90deg, var(--dw-grid) 1px, transparent 1px);
+}
+
+.app-shell .change-track {
+  background: linear-gradient(90deg, #e6f1ed 0 50%, #fff1e8 50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .planning-shell *,
+  .export-shell *,
+  .sales-shell *,
+  .installation-scope * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (max-width: 1120px) {
+  .sales-shell .sales-dashboard-grid,
+  .sales-shell .sales-kpi-grid,
+  .sales-shell .sales-topbar,
+  .sales-shell .model-toolbar {
+    min-width: 0;
+  }
+
+  .sales-shell .sales-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sales-shell .industry-grid,
+  .sales-shell .model-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "main" "structure" "penetration" "segment";
+  }
+
+  .sales-shell .model-grid {
+    grid-template-areas: "trend" "ranking" "models" "fuel" "matrix";
+  }
+
+  .sales-shell .dual-analysis {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+
+  .sales-shell .multi-trend-panel {
+    grid-column: 1 / -1;
+  }
+}

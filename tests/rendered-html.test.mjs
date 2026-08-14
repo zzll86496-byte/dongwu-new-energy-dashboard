@@ -71,3 +71,51 @@ test("keeps all seven database routes and the branded asset", async () => {
   assert.match(layout, /<html lang="zh-CN">/);
   assert.doesNotMatch(layout, /Geist|next\/font\/google/);
 });
+
+test("applies one research-terminal design system across database pages", async () => {
+  const [
+    systemCss,
+    tokensSource,
+    layout,
+    lithium,
+    batteryExport,
+    sales,
+    vehicleFrame,
+    installationLayout,
+    commercial,
+  ] = await Promise.all([
+    readFile(new URL("../app/research-system.css", import.meta.url), "utf8"),
+    readFile(new URL("../design-tokens/research-theme.tokens.json", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/LithiumDashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/BatteryExportDashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/sales/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/vehicle-supply-frame/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/installation-frame/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../public/commercial-vehicle-dashboard.html", import.meta.url), "utf8"),
+  ]);
+
+  const tokens = JSON.parse(tokensSource);
+  assert.equal(tokens.primitive.color.navy900.$value, "#00215D");
+  assert.equal(tokens.semantic.color.action.$value, "{primitive.color.navy900}");
+  assert.equal(tokens.component.control.height.$value, "32px");
+
+  for (const color of ["#00215d", "#007bc5", "#17365d", "#f47a2a", "#a9974f", "#2b7a66", "#f3f6f8", "#d7e1ea"]) {
+    assert.match(systemCss, new RegExp(color, "i"));
+  }
+  assert.match(systemCss, /--dw-radius:\s*4px/);
+  assert.match(systemCss, /--dw-motion:\s*150ms/);
+  assert.match(systemCss, /prefers-reduced-motion:\s*reduce/);
+  assert.match(systemCss, /:focus-visible/);
+  assert.match(systemCss, /font-variant-numeric:\s*tabular-nums/);
+  assert.match(systemCss, /border-bottom:\s*3px solid var\(--dw-primary\)/);
+
+  assert.match(layout, /research-system\.css/);
+  assert.match(lithium, /research-system\.css/);
+  assert.match(batteryExport, /research-system\.css/);
+  assert.match(sales, /research-system\.css/);
+  assert.match(vehicleFrame, /research-system\.css\?raw/);
+  assert.match(installationLayout, /research-system\.css/);
+  assert.match(commercial, /--navy:#00215d/);
+  assert.match(commercial, /prefers-reduced-motion:reduce/);
+});
