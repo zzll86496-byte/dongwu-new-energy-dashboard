@@ -1,0 +1,350 @@
+.sales-select {
+  position: relative;
+  min-width: 104px;
+  color: #173f62;
+}
+
+.sales-select--company {
+  min-width: 180px;
+}
+
+.sales-select-label {
+  display: block;
+  margin: 0 0 4px;
+  color: #6f7d86;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sales-select-trigger,
+.picker-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 31px 7px 11px;
+  border: 1px solid #aebdc8;
+  border-radius: 8px;
+  background: #fff;
+  color: #173f62;
+  font: inherit;
+  font-size: 9px;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.sales-select-trigger > span,
+.picker-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  color: inherit !important;
+  font-size: inherit !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sales-panel header .sales-select-label,
+.core-chart-card > header .sales-select-label,
+.metric-toolbar .sales-select-label {
+  display: block;
+  margin: 0 0 4px;
+  color: #6f7d86;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.sales-panel header .sales-select-trigger > span,
+.core-chart-card > header .sales-select-trigger > span,
+.metric-toolbar .sales-select-trigger > span {
+  margin: 0;
+  color: #173f62 !important;
+  font-size: 9px !important;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.sales-select-trigger > i,
+.picker-trigger::after {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  margin: 0;
+  border-right: 1.6px solid #173f62;
+  border-bottom: 1.6px solid #173f62;
+  background: transparent;
+  content: "";
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform 140ms ease;
+}
+
+.sales-select.is-open .sales-select-trigger > i,
+.company-picker.is-open .picker-trigger::after {
+  transform: translateY(-30%) rotate(225deg);
+}
+
+.sales-select.is-open .sales-select-trigger,
+.sales-select-trigger:focus-visible,
+.company-picker.is-open .picker-trigger,
+.picker-trigger:focus-visible {
+  border-color: #174b76;
+  outline: none;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #174b76;
+}
+
+.sales-select-menu,
+.model-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  z-index: 80;
+  width: max(100%, 190px);
+  max-height: 340px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #82939f;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(20, 43, 58, .18);
+  scrollbar-color: #8b8b8b transparent;
+  scrollbar-width: auto;
+}
+
+.sales-select-menu button,
+.model-select-menu button {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  overflow: hidden;
+  padding: 8px 12px;
+  border: 0;
+  background: #fff;
+  color: #173f62;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.sales-select-menu button:hover,
+.sales-select-menu button.active,
+.model-select-menu button:hover {
+  background: #eef2f4;
+}
+
+.sales-select-menu button.selected,
+.model-select-menu button.selected {
+  background: #858585;
+  color: #fff;
+  font-weight: 700;
+}
+
+.sales-select-menu button.selected.active,
+.model-select-menu button.selected:hover {
+  background: #777;
+}
+
+.sales-select-menu button:focus-visible,
+.model-select-menu button:focus-visible {
+  outline: 2px solid #174b76;
+  outline-offset: -2px;
+}
+
+.sales-select-menu::-webkit-scrollbar,
+.model-select-menu::-webkit-scrollbar,
+.picker-popover > div::-webkit-scrollbar {
+  width: 16px;
+}
+
+.sales-select-menu::-webkit-scrollbar-thumb,
+.model-select-menu::-webkit-scrollbar-thumb,
+.picker-popover > div::-webkit-scrollbar-thumb {
+  border: 4px solid transparent;
+  border-radius: 12px;
+  background: #8b8b8b;
+  background-clip: padding-box;
+}
+
+.sales-select-menu::-webkit-scrollbar-button:single-button,
+.model-select-menu::-webkit-scrollbar-button:single-button,
+.picker-popover > div::-webkit-scrollbar-button:single-button {
+  display: block;
+  height: 14px;
+  background: #f0f0f0;
+}
+
+.company-picker {
+  position: relative;
+  min-width: 150px;
+}
+
+.picker-trigger {
+  min-width: 0;
+}
+
+.picker-trigger strong {
+  margin-right: 4px;
+  color: #8c783e;
+  font-size: 8px;
+}
+
+.picker-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 80;
+  width: max(100%, 250px);
+  padding: 7px 0 0;
+  border: 1px solid #82939f;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(20, 43, 58, .18);
+}
+
+.picker-popover > input {
+  width: calc(100% - 14px);
+  min-height: 34px;
+  margin: 0 7px 7px;
+  padding: 7px 10px;
+  border: 1px solid #b7c4cd;
+  border-radius: 5px;
+  color: #173f62;
+  background: #fff;
+  font: inherit;
+  font-size: 9px;
+  outline: none;
+}
+
+.picker-popover > input:focus {
+  border-color: #174b76;
+  box-shadow: 0 0 0 2px rgba(23, 75, 118, .14);
+}
+
+.picker-popover > div {
+  max-height: 340px;
+  margin: 0;
+  overflow-y: auto;
+  scrollbar-color: #8b8b8b transparent;
+}
+
+.picker-popover label {
+  position: relative;
+  display: block;
+  min-height: 36px;
+  padding: 9px 12px;
+  color: #173f62;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.picker-popover label:hover {
+  background: #eef2f4;
+}
+
+.picker-popover label.selected {
+  background: #858585;
+  color: #fff;
+  font-weight: 700;
+}
+
+.picker-popover label:has(input:focus-visible) {
+  outline: 2px solid #174b76;
+  outline-offset: -2px;
+}
+
+.picker-popover label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.model-picker {
+  min-width: 165px;
+}
+
+.model-picker-trigger {
+  width: 100%;
+}
+
+.model-select-menu {
+  width: max(100%, 220px);
+}
+
+.model-select-menu button:disabled {
+  color: #aab3b9;
+  cursor: not-allowed;
+}
+
+.sales-panel:has(.sales-select.is-open),
+.sales-panel:has(.company-picker.is-open),
+.core-chart-card:has(.sales-select.is-open) {
+  position: relative;
+  z-index: 60;
+  overflow: visible;
+}
+
+.core-chart-controls .sales-select,
+.core-model-range .sales-select,
+.core-single-period {
+  min-width: 96px;
+}
+
+.company-model-controls .sales-select {
+  min-width: 104px;
+}
+
+.company-model-controls .sales-select--company {
+  min-width: 180px;
+}
+
+.model-panel header .sales-select {
+  width: 180px;
+}
+
+.metric-toolbar .sales-select {
+  min-width: 132px;
+}
+
+.snapshot-panel .sales-select {
+  min-width: 112px;
+}
+
+@media (pointer: coarse) {
+  .sales-select-trigger,
+  .picker-trigger,
+  .sales-select-menu button,
+  .model-select-menu button,
+  .picker-popover label {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 760px) {
+  .core-chart-controls .sales-select,
+  .core-model-range .sales-select,
+  .company-model-controls .sales-select,
+  .company-model-controls .sales-select--company {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .metric-toolbar .sales-select {
+    min-width: 150px;
+  }
+}

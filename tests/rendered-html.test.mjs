@@ -72,7 +72,7 @@ test("keeps all six database routes and the branded asset", async () => {
 });
 
 test("keeps the approved planning template across database interfaces", async () => {
-  const [sharedCss, storage, lithium, batteryExport, installationCss, supply, supplyCss, sales, salesCoreCss] = await Promise.all([
+  const [sharedCss, storage, lithium, batteryExport, installationCss, supply, supplyCss, sales, salesCoreCss, salesSelectCss] = await Promise.all([
     readFile(new URL("../app/research-template.css", import.meta.url), "utf8"),
     readFile(new URL("../app/DatabasePage.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/LithiumDashboard.tsx", import.meta.url), "utf8"),
@@ -82,6 +82,7 @@ test("keeps the approved planning template across database interfaces", async ()
     readFile(new URL("../app/vehicle-supply-frame/research-template.css", import.meta.url), "utf8"),
     readFile(new URL("../app/sales/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/sales/core-charts.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/sales/selects.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(sharedCss, /--research-navy:\s*#153e6c/);
@@ -96,6 +97,13 @@ test("keeps the approved planning template across database interfaces", async ()
   assert.doesNotMatch(sales, /LONG-CHART CORE|销量长图核心图表|core-chart-heading/);
   assert.match(sales, /className="core-model-toolbar"/);
   assert.match(sales, /core-chart-grid--three-tail/);
+  assert.doesNotMatch(sales, /<select\b|<option\b/);
+  assert.match(sales, /role="combobox"/);
+  assert.match(sales, /role="listbox"/);
+  assert.match(sales, /aria-activedescendant/);
+  assert.match(salesSelectCss, /\.sales-select-menu button\.selected/);
+  assert.match(salesSelectCss, /\.sales-select-trigger:focus-visible/);
+  assert.match(salesSelectCss, /@media \(pointer: coarse\)/);
   assert.match(salesCoreCss, /nth-last-child\(-n\+3\)\{grid-column:span 2\}/);
   assert.match(salesCoreCss, /core-chart-grid--single \.core-chart-card\{grid-column:auto;width:min\(100%,1760px\)\}/);
   assert.match(salesCoreCss, /core-chart-grid--single \.core-chart-card svg\{height:clamp\(320px,24vw,460px\)\}/);
