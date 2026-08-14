@@ -27,10 +27,7 @@
 .core-chart-legend i.line{height:2px}
 .core-chart-card svg{display:block;width:100%;height:255px;overflow:visible}
 .core-gridline{stroke:#e7ecef;stroke-width:1}
-.core-axis-line{stroke:#aebdca;stroke-width:1.2}
 .core-axis-label,.core-x-label{fill:#7c8991;font-size:9px}
-.core-series-line{stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(23,63,98,.18))}
-.core-series-point{stroke:#fff;stroke-width:2.6px;filter:drop-shadow(0 1px 2px rgba(23,63,98,.28))}
 .core-chart-card>footer{display:flex;gap:7px;overflow:auto;border-top:1px solid #edf0f2;padding:10px 14px;background:#fbfcfc}
 .core-chart-card>footer>em{margin-right:auto;color:#7c8991;font-size:8px;font-style:normal;white-space:nowrap}
 .core-chart-card>footer span{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
@@ -65,11 +62,10 @@
 .company-model-line-chart .sales-legend{position:relative;top:auto;right:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:6px 12px;max-height:94px;margin-bottom:8px;padding:9px 10px;overflow:auto;border:1px solid #dce3e7;border-radius:4px;background:#f7f9fa}
 .company-model-line-chart .sales-legend span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .company-model-line-chart .sales-line-chart svg{height:400px}
-.sales-line-chart svg line.chart-gridline{stroke:#d4dee6;stroke-width:1;stroke-dasharray:none}
-.sales-line-chart svg line.chart-axis-line{stroke:#9fb0bf;stroke-width:1.2;stroke-dasharray:none}
-.sales-line-chart svg .chart-series-line{stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(23,63,98,.2))}
-.sales-line-chart svg .chart-series-point{stroke:#fff;stroke-width:3px;filter:drop-shadow(0 1px 2px rgba(23,63,98,.3))}
-.sales-line-chart svg .x-label{fill:#60758a;font-size:10px}
+.sales-model-line-chart svg>g line{stroke:#dfe7eb;stroke-width:1;stroke-dasharray:none}
+.sales-model-line-chart svg polyline{stroke-linecap:round;stroke-linejoin:round}
+.sales-model-line-chart svg circle{stroke:none}
+.sales-model-line-chart svg .x-label{fill:#71869a;font-size:9px}
 
 @media(max-width:1100px){
   .core-chart-grid,.core-model-grid{grid-template-columns:1fr}

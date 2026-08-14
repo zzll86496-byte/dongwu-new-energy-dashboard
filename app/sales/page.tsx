@@ -29,30 +29,25 @@ const volume = (value: number) => (value / 10000).toLocaleString("zh-CN", { maxi
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 const modelRecordKey = (record: ModelRecord) => `${record.fuel}|${record.subtype}|${record.model}`;
 
-function LineChart({ periods, series, percent = false, vehicles = false }: { periods: string[]; series: { name: string; values: number[]; color: string }[]; percent?: boolean; vehicles?: boolean }) {
+function linePoints(values: number[], width: number, height: number, max: number, min = 0) {
+  const span = Math.max(max - min, 1);
+  return values.map((value, index) => `${40 + index / Math.max(values.length - 1, 1) * (width - 58)},${14 + (max - value) / span * (height - 44)}`).join(" ");
+}
+
+function LineChart({ periods, series, percent = false, vehicles = false, modelStyle = false }: { periods: string[]; series: { name: string; values: number[]; color: string }[]; percent?: boolean; vehicles?: boolean; modelStyle?: boolean }) {
   const width = 960;
-  const height = 340;
-  const left = 50;
-  const right = 18;
-  const top = 16;
-  const bottom = 66;
-  const plotWidth = width - left - right;
-  const plotHeight = height - top - bottom;
+  const height = 310;
   const all = series.flatMap(item => item.values);
   const max = Math.max(...all, percent ? .1 : 1) * 1.08;
   const min = percent ? Math.min(0, ...all) : 0;
-  const span = Math.max(max - min, percent ? .001 : 1);
   const labelIndexes = periods.map((_, index) => index).filter(index => index === 0 || index === periods.length - 1 || index % Math.max(1, Math.floor(periods.length / 6)) === 0);
-  const x = (index: number) => left + index / Math.max(periods.length - 1, 1) * plotWidth;
-  const y = (value: number) => top + (max - value) / span * plotHeight;
-  return <div className="sales-line-chart">
+  return <div className={`sales-line-chart${modelStyle ? " sales-model-line-chart" : ""}`}>
     <div className="sales-legend">{series.map(item => <span key={item.name}><i style={{ background: item.color }} />{item.name}</span>)}</div>
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="销量时间序列">
-      {[0, 1, 2, 3, 4].map(tick => { const gridY = top + tick / 4 * plotHeight; const value = max - tick / 4 * (max - min); return <g key={tick}><line className="chart-gridline" x1={left} x2={width - right} y1={gridY} y2={gridY} /><text x={left - 10} y={gridY + 4}>{percent ? `${(value * 100).toFixed(0)}%` : vehicles ? Math.round(value).toLocaleString("zh-CN") : `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`}</text></g>; })}
-      <line className="chart-axis-line" x1={left} x2={left} y1={top} y2={top + plotHeight} />
-      {series.map(item => <polyline className="chart-series-line" key={item.name} points={item.values.map((value, index) => `${x(index)},${y(value)}`).join(" ")} fill="none" stroke={item.color} strokeWidth="3.6" vectorEffect="non-scaling-stroke" />)}
-      {series.flatMap(item => item.values.map((value, index) => <circle className="chart-series-point" key={`${item.name}-${index}`} cx={x(index)} cy={y(value)} r="4.2" fill={item.color} vectorEffect="non-scaling-stroke"><title>{`${item.name} · ${periods[index]} · ${vehicles ? `${value.toLocaleString("zh-CN")}辆` : percent ? `${(value * 100).toFixed(1)}%` : `${volume(value)}万辆`}`}</title></circle>))}
-      {labelIndexes.map(index => <text className="x-label" key={index} x={x(index)} y={height - 14} textAnchor="end" transform={`rotate(-38 ${x(index)} ${height - 14})`}>{formatPeriod(periods[index])}</text>)}
+      {[0, 1, 2, 3, 4].map(tick => { const y = 14 + tick / 4 * (height - 44); const value = max - tick / 4 * (max - min); return <g key={tick}><line x1="40" x2={width - 18} y1={y} y2={y} /><text x="35" y={y + 4}>{percent ? `${(value * 100).toFixed(0)}%` : vehicles ? Math.round(value).toLocaleString("zh-CN") : `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`}</text></g>; })}
+      {series.map(item => <polyline key={item.name} points={linePoints(item.values, width, height, max, min)} fill="none" stroke={item.color} strokeWidth={modelStyle ? "2.4" : "3"} vectorEffect="non-scaling-stroke" />)}
+      {series.map(item => item.values.map((value, index) => modelStyle || index === item.values.length - 1 ? <circle key={item.name + index} cx={40 + index / Math.max(item.values.length - 1, 1) * (width - 58)} cy={14 + (max - value) / Math.max(max - min, 1) * (height - 44)} r={modelStyle ? "2.8" : "4"} fill={item.color}><title>{`${item.name} · ${periods[index]} · ${value.toLocaleString("zh-CN")}辆`}</title></circle> : null))}
+      {labelIndexes.map(index => <text className="x-label" key={index} x={40 + index / Math.max(periods.length - 1, 1) * (width - 58)} y={height - 7}>{formatPeriod(periods[index])}</text>)}
     </svg>
   </div>;
 }
@@ -68,21 +63,33 @@ function lastCoreValue(values: (number | null)[]) {
 }
 
 function CoreChartFigure({ chart }: { chart: CoreChart }) {
+  const cumulative = chart.category === "累计销量";
   const meaningfulStartIndex = Math.max(chart.categories.findIndex((_, index) => chart.series.some(series => !series.percent && series.values[index] !== null && Math.abs(series.values[index] as number) > 1e-12)), 0);
   const [startIndex, setStartIndex] = useState(meaningfulStartIndex);
   const [endIndex, setEndIndex] = useState(Math.max(chart.categories.length - 1, 0));
+  const availableCumulativeMonths = useMemo(() => Array.from(new Set(chart.categories.filter((_, index) => chart.series.some(series => !series.percent && series.values[index] !== null)).map(period => period.slice(5)))).sort(), [chart]);
+  const defaultCumulativeMonth = chart.categories[chart.categories.length - 1]?.slice(5) || availableCumulativeMonths[availableCumulativeMonths.length - 1] || "01";
+  const [cumulativeMonth, setCumulativeMonth] = useState(defaultCumulativeMonth);
+  const cumulativeIndexes = useMemo(() => chart.categories.map((period, index) => ({ period, index })).filter(item => item.period.slice(5) === cumulativeMonth && chart.series.some(series => !series.percent && series.values[item.index] !== null)).map(item => item.index), [chart, cumulativeMonth]);
+  const [startYearIndex, setStartYearIndex] = useState(0);
+  const [endYearIndex, setEndYearIndex] = useState(Math.max(cumulativeIndexes.length - 1, 0));
   useEffect(() => {
     setStartIndex(meaningfulStartIndex);
     setEndIndex(Math.max(chart.categories.length - 1, 0));
-  }, [chart.id, chart.categories.length, meaningfulStartIndex]);
-  const categories = chart.categories.slice(startIndex, endIndex + 1);
-  const shownSeries = chart.series.map(series => ({ ...series, values: series.values.slice(startIndex, endIndex + 1) }));
+    setCumulativeMonth(defaultCumulativeMonth);
+    const latestMonthCount = chart.categories.filter((period, index) => period.slice(5) === defaultCumulativeMonth && chart.series.some(series => !series.percent && series.values[index] !== null)).length;
+    setStartYearIndex(0);
+    setEndYearIndex(Math.max(latestMonthCount - 1, 0));
+  }, [chart.id, chart.categories.length, meaningfulStartIndex, defaultCumulativeMonth]);
+  const selectedIndexes = cumulative ? cumulativeIndexes.slice(startYearIndex, endYearIndex + 1) : chart.categories.map((_, index) => index).slice(startIndex, endIndex + 1);
+  const categories = selectedIndexes.map(index => cumulative ? chart.categories[index].slice(0, 4) : chart.categories[index]);
+  const shownSeries = chart.series.map(series => ({ ...series, values: selectedIndexes.map(index => series.values[index]) }));
   const width = 760;
   const height = 292;
   const left = 48;
   const right = 48;
   const top = 18;
-  const bottom = 50;
+  const bottom = 38;
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const volumeSeries = shownSeries.filter(series => !series.percent);
@@ -101,7 +108,7 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
   const volumeY = (value: number) => top + (volumeMax - value) / volumeMax * plotHeight;
   const percentY = (value: number) => top + (percentMax - value) / percentSpan * plotHeight;
   return <article className="core-chart-card">
-    <header><div><span>{chart.category}</span><h3>{chart.title}</h3></div><div className="core-chart-controls"><b>{chart.source}</b><label>起始<select aria-label={`${chart.title}起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{chart.categories.map((period, index) => <option key={`start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${chart.title}结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{chart.categories.map((period, index) => <option key={`end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
+    <header><div><span>{chart.category}</span><h3>{chart.title}</h3></div><div className="core-chart-controls"><b>{chart.source}</b>{cumulative ? <><label>累计至<select aria-label={`${chart.title}累计区间`} value={cumulativeMonth} onChange={event => { const nextMonth = event.target.value; const nextCount = chart.categories.filter((period, index) => period.slice(5) === nextMonth && chart.series.some(series => !series.percent && series.values[index] !== null)).length; setCumulativeMonth(nextMonth); setStartYearIndex(0); setEndYearIndex(Math.max(nextCount - 1, 0)); }}>{availableCumulativeMonths.map(month => <option key={`cumulative-${month}`} value={month}>1—{Number(month)}月</option>)}</select></label><label>起始年度<select aria-label={`${chart.title}起始年度`} value={startYearIndex} onChange={event => { const next = Number(event.target.value); setStartYearIndex(next); if (next > endYearIndex) setEndYearIndex(next); }}>{cumulativeIndexes.map((index, optionIndex) => <option key={`year-start-${chart.categories[index]}`} value={optionIndex}>{chart.categories[index].slice(0, 4)}</option>)}</select></label><label>结束年度<select aria-label={`${chart.title}结束年度`} value={endYearIndex} onChange={event => { const next = Number(event.target.value); setEndYearIndex(next); if (next < startYearIndex) setStartYearIndex(next); }}>{cumulativeIndexes.map((index, optionIndex) => <option key={`year-end-${chart.categories[index]}`} value={optionIndex}>{chart.categories[index].slice(0, 4)}</option>)}</select></label></> : <><label>起始<select aria-label={`${chart.title}起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{chart.categories.map((period, index) => <option key={`start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${chart.title}结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{chart.categories.map((period, index) => <option key={`end-${period}`} value={index}>{period}</option>)}</select></label></>}</div></header>
     <div className="core-chart-legend">{shownSeries.map((series, index) => <span key={`${series.name}-${index}`}><i className={series.mode} style={{ background: palette[index % palette.length] }} />{series.name}</span>)}</div>
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${chart.title}图表`}>
       {[0, 1, 2, 3, 4].map(tick => {
@@ -109,21 +116,20 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
         const value = volumeMax * (1 - tick / 4);
         return <g key={tick}><line className="core-gridline" x1={left} x2={width - right} y1={y} y2={y} /><text className="core-axis-label" x={left - 7} y={y + 4} textAnchor="end">{value.toFixed(value >= 20 ? 0 : 1)}</text>{percentSeries.length > 0 && <text className="core-axis-label" x={width - right + 7} y={y + 4}>{`${(percentMax - tick / 4 * percentSpan) * 100 | 0}%`}</text>}</g>;
       })}
-      <line className="core-axis-line" x1={left} x2={left} y1={top} y2={top + plotHeight} />
       {barSeries.flatMap((series, seriesIndex) => series.values.map((value, index) => value === null ? null : <rect key={`${series.name}-${index}`} x={x(index) - barWidth * barSeries.length / 2 + seriesIndex * barWidth} y={volumeY(value)} width={Math.max(barWidth - 2, 1)} height={Math.max(top + plotHeight - volumeY(value), 0)} rx="1.5" fill={palette[seriesIndex % palette.length]}><title>{`${categories[index]} · ${series.name}: ${coreValue(value, false, chart.unit)}`}</title></rect>))}
       {shownSeries.filter(series => series.mode === "line").map((series, seriesIndex) => {
         const colorIndex = shownSeries.indexOf(series);
         const points = series.values.map((value, index) => value === null ? null : `${x(index)},${series.percent ? percentY(value) : volumeY(value)}`).filter(Boolean).join(" ");
-        return <g key={`${series.name}-${seriesIndex}`}><polyline className="core-series-line" points={points} fill="none" stroke={palette[colorIndex % palette.length]} strokeWidth="3.6" vectorEffect="non-scaling-stroke" />{series.values.map((value, index) => value === null ? null : <circle className="core-series-point" key={index} cx={x(index)} cy={series.percent ? percentY(value) : volumeY(value)} r="3.8" fill={palette[colorIndex % palette.length]} vectorEffect="non-scaling-stroke"><title>{`${categories[index]} · ${series.name}: ${coreValue(value, series.percent, chart.unit)}`}</title></circle>)}</g>;
+        return <g key={`${series.name}-${seriesIndex}`}><polyline points={points} fill="none" stroke={palette[colorIndex % palette.length]} strokeWidth="3" vectorEffect="non-scaling-stroke" />{series.values.map((value, index) => value === null ? null : <circle key={index} cx={x(index)} cy={series.percent ? percentY(value) : volumeY(value)} r="2.5" fill={palette[colorIndex % palette.length]}><title>{`${categories[index]} · ${series.name}: ${coreValue(value, series.percent, chart.unit)}`}</title></circle>)}</g>;
       })}
-      {categories.map((category, index) => index % labelEvery === 0 || index === categories.length - 1 ? <text key={`${category}-${index}`} className="core-x-label" x={x(index)} y={height - 12} textAnchor="end" transform={`rotate(-38 ${x(index)} ${height - 12})`}>{category}</text> : null)}
+      {categories.map((category, index) => index % labelEvery === 0 || index === categories.length - 1 ? <text key={`${category}-${index}`} className="core-x-label" x={x(index)} y={height - 11} textAnchor="middle">{category}</text> : null)}
     </svg>
-    <footer><em>{categories[0]} 至 {categories[categories.length - 1]} · {categories.length}期</em>{shownSeries.map(series => { const value = lastCoreValue(series.values); return value === null ? null : <span key={series.name}><i>{series.name}</i><strong>{coreValue(value, series.percent, chart.unit)}</strong></span>; })}</footer>
+    <footer><em>{categories[0]} 至 {categories[categories.length - 1]} · {cumulative ? `1—${Number(cumulativeMonth)}月累计 · ${categories.length}年` : `${categories.length}期`}</em>{shownSeries.map(series => { const value = lastCoreValue(series.values); return value === null ? null : <span key={series.name}><i>{series.name}</i><strong>{coreValue(value, series.percent, chart.unit)}</strong></span>; })}</footer>
   </article>;
 }
 
 function CoreChartGallery({ boardKey }: { boardKey: SheetKey }) {
-  const charts = coreCharts.filter(chart => chart.module === boardKey);
+  const charts = coreCharts.filter(chart => chart.module === boardKey && chart.id !== "chart18");
   const categories = Array.from(new Set(charts.map(chart => chart.category)));
   const [category, setCategory] = useState("");
   useEffect(() => setCategory(""), [boardKey]);
@@ -197,7 +203,7 @@ function ModelPicker({ options, selected, onChange }: { options: { key: string; 
   return <div className="company-picker model-picker"><button className="picker-trigger model-picker-trigger" aria-expanded={open} onClick={() => setOpen(!open)}><span>{triggerLabel}</span></button>{open && <div className="model-select-menu" role="listbox" aria-label="选择车型" aria-multiselectable="true">{options.map(option => { const active = selected.includes(option.key); return <button type="button" role="option" aria-selected={active} title={option.detail} key={option.key} className={active ? "selected" : ""} disabled={!active && selected.length >= maxSelected} onClick={() => toggle(option.key)}>{option.label}</button>; })}</div>}</div>;
 }
 
-function RetailCompanyModelHistory({ modelData }: { modelData: ModelData }) {
+function CompanyModelHistory({ modelData, scope }: { modelData: ModelData; scope: Scope }) {
   const companies = useMemo(() => Array.from(new Set(modelData.records.map(record => record.company))).sort((a, b) => a.localeCompare(b, "zh-CN")), [modelData]);
   const defaultCompany = companies.includes("北京奔驰") ? "北京奔驰" : companies[0] || "";
   const [company, setCompany] = useState(defaultCompany);
@@ -218,9 +224,9 @@ function RetailCompanyModelHistory({ modelData }: { modelData: ModelData }) {
   const modelOptions = rows.map(record => ({ key: modelRecordKey(record), label: record.model, detail: record.fuel === record.subtype ? record.fuel : `${record.fuel} · ${record.subtype}` }));
   const series = rows.filter(record => selectedModels.includes(modelRecordKey(record))).map((record, index) => ({ name: modelCounts.get(record.model)! > 1 ? `${record.model} · ${record.subtype}` : record.model, values: record.values.slice(startIndex, endIndex + 1), color: modelLineColor(index) }));
   return <article className="sales-panel company-model-history">
-    <header><div><span>单车企车型历史</span><h2>{company} · 车型销量趋势</h2></div><div className="company-model-controls"><label>车企<select aria-label="选择零售车企" value={company} onChange={event => setCompany(event.target.value)}>{companies.map(name => <option key={name} value={name}>{name}</option>)}</select></label><ModelPicker options={modelOptions} selected={selectedModels} onChange={setSelectedModels} /><label>起始<select aria-label={`${company}车型趋势起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${company}车型趋势结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{modelData.periods.map((period, index) => <option key={`retail-model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
+    <header><div><span>单车企车型历史</span><h2>{company} · {scope === "wholesale" ? "批发" : "零售"}车型销量趋势</h2></div><div className="company-model-controls"><label>车企<select aria-label={`选择${scope === "wholesale" ? "批发" : "零售"}车企`} value={company} onChange={event => setCompany(event.target.value)}>{companies.map(name => <option key={name} value={name}>{name}</option>)}</select></label><ModelPicker options={modelOptions} selected={selectedModels} onChange={setSelectedModels} /><label>起始<select aria-label={`${company}车型趋势起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{modelData.periods.map((period, index) => <option key={`${scope}-model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${company}车型趋势结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{modelData.periods.map((period, index) => <option key={`${scope}-model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
     <div className="company-model-summary"><span>已选 <b>{series.length}</b> / {rows.length} 款车型</span><span><b>{categoryCount}</b> 个动力类别</span><span>{periods[0]} 至 {periods[periods.length - 1]}</span></div>
-    <div className="company-model-line-chart"><LineChart periods={periods} series={series} vehicles /></div>
+    <div className="company-model-line-chart"><LineChart periods={periods} series={series} vehicles modelStyle /></div>
   </article>;
 }
 
@@ -242,12 +248,12 @@ function ModelCoreSpotlight({ scope }: { scope: Scope }) {
   const selectedSeries = companies.filter(item => selected.includes(item.name));
   const trendPeriods = modelData.periods.slice(trendStart, trendEnd + 1);
   return <section className="core-model-section">
-    <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>分车型【{scope === "wholesale" ? "批发" : "零售"}】核心图表</h2><p>{scope === "retail" ? "车企横向对比、多车企历史趋势，以及单一车企旗下全部车型走势。" : "同一时间点的企业横向对比，以及不同车企的历史销量趋势；最多选择 6 家企业同图分析。"}</p></div><div className="core-model-actions"><strong>{scope === "retail" ? 3 : 2}<small>张核心图</small></strong><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div></header>
+    <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>分车型【{scope === "wholesale" ? "批发" : "零售"}】核心图表</h2><p>车企横向对比、多车企历史趋势，以及单一车企旗下可选车型走势。</p></div><div className="core-model-actions"><strong>3<small>张核心图</small></strong><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div></header>
     <div className="core-model-grid">
       <article className="sales-panel"><header><div><span>时间点横向对比</span><h2>{modelData.periods[rankingIndex]} 车企销量排名</h2></div><label className="core-single-period">时间<select value={rankingIndex} onChange={event => setRankingIndex(Number(event.target.value))}>{modelData.periods.map((period, index) => <option key={period} value={index}>{period}</option>)}</select></label></header><SnapshotBars percent={false} rows={latestRanking.slice(0, 15).map(item => ({ name: item.name, value: item.values[rankingIndex] }))} /></article>
-      <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><label>起始<select value={trendStart} onChange={event => { const next = Number(event.target.value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }}>{modelData.periods.map((period, index) => <option key={`model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select value={trendEnd} onChange={event => { const next = Number(event.target.value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }}>{modelData.periods.map((period, index) => <option key={`model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} /></article>
+      <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><label>起始<select value={trendStart} onChange={event => { const next = Number(event.target.value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }}>{modelData.periods.map((period, index) => <option key={`model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select value={trendEnd} onChange={event => { const next = Number(event.target.value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }}>{modelData.periods.map((period, index) => <option key={`model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} modelStyle /></article>
     </div>
-    {scope === "retail" && <RetailCompanyModelHistory modelData={modelData} />}
+    <CompanyModelHistory modelData={modelData} scope={scope} />
   </section>;
 }
 
@@ -382,7 +388,7 @@ export default function SalesPage() {
   const boards: { key: SheetKey; scope: Scope; source: "industry" | "models"; name: string; detail: string }[] = [
     { key: "wholesale-industry", scope: "wholesale", source: "industry", name: "乘联会【批发】", detail: "11张长图核心图表" },
     { key: "wholesale-models", scope: "wholesale", source: "models", name: "分车型【批发】", detail: "车型趋势 · 企业对比" },
-    { key: "retail-industry", scope: "retail", source: "industry", name: "乘联会【零售】", detail: "1张长图核心图表" },
+    { key: "retail-industry", scope: "retail", source: "industry", name: "乘联会【零售】", detail: "6张月度与累计核心图表" },
     { key: "retail-models", scope: "retail", source: "models", name: "分车型【零售】", detail: "企业横向 · 历史趋势" },
   ];
   const [sheetKey, setSheetKey] = useState<SheetKey>("wholesale-industry");
