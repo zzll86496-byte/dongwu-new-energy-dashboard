@@ -93,6 +93,10 @@
   .planning-shell .raw-table-wrap{height:156px}
 }
 
+/* Official Soochow Securities brand lockup used consistently across databases. */
+.planning-shell .sidebar-brand{color:inherit;text-decoration:none}
+.planning-shell .sidebar-brand img{display:block;width:124px;height:auto}
+
 /* Reference palette correction: navy/olive/neutral gray as the chart base, orange only for variance. */
 .planning-shell .sidebar-logo{background:#12355e}.planning-shell .mode-switch button.active{background:#12355e}.planning-shell .metric-card:hover,.planning-shell .metric-card.active{border-color:#12355e;box-shadow:inset 0 -3px #12355e}.planning-shell .positive-bar{background:#12355e!important}.planning-shell .negative-bar{background:#ed7d31!important}.planning-shell .company-bar i{background:#12355e!important}.planning-shell .line-legend button:nth-child(1) i{background:#12355e!important}.planning-shell .line-legend button:nth-child(2) i{background:#a99b5a!important}.planning-shell .line-legend button:nth-child(3) i{background:#8c8c8e!important}.planning-shell .line-legend button:nth-child(4) i{background:#6f7d8c!important}.planning-shell .line-legend button:nth-child(5) i{background:#ed7d31!important}.planning-shell .line-legend button:nth-child(6) i{background:#c9c9c9!important}.planning-shell .donut{background:conic-gradient(#12355e 0 34%,#a99b5a 34% 57%,#8c8c8e 57% 76%,#6f7d8c 76% 87%,#ed7d31 87% 94%,#c9c9c9 94%)!important}.planning-shell .selected-summary{border-left-color:#12355e}.planning-shell .company-list button.active{background:#eef2f6;color:#12355e}
 .planning-shell .trend-card .positive-bar,.planning-shell .trend-card .negative-bar{background:#8c8c8e!important}

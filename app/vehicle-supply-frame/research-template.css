@@ -35,6 +35,12 @@
   text-decoration: none;
 }
 
+.supply-brand img {
+  display: block;
+  width: 124px;
+  height: auto;
+}
+
 .supply-brand > span {
   display: grid;
   place-items: center;

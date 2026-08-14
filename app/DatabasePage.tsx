@@ -224,7 +224,7 @@ export default function Page() {
 
   return <main className="app-shell database-template">
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark">东吴</div><div><strong>东吴电新</strong><small>NEW ENERGY DATA</small></div></div>
+      <a className="brand" href="/" aria-label="返回东吴电新数据库首页"><img src="/soochow-securities.png" width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
       <p className="side-label">数据模块</p>
       <nav>{modules.map((module, index) => <button key={module.name} className={active === module.name ? "active" : ""} onClick={() => setActive(module.name)}><i className={`dot dot-${index}`} /><span><b>{module.name}</b><small>{module.meta}</small></span><em>›</em></button>)}</nav>
       <div className="side-source"><strong>数据口径</strong><p>价格：日度最低/最高/均价</p><p>产能、产量、开工率：月度</p><p>出货量：全球企业月度</p></div>

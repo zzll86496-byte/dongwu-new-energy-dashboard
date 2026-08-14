@@ -54,6 +54,15 @@
   gap: 7px;
   padding: 0 0 10px;
   border-bottom: 1px solid #e1e4e6;
+  text-decoration: none;
+}
+
+.database-template .brand img,
+.export-shell .export-brand img,
+.sales-shell .sales-brand img {
+  display: block;
+  width: 124px;
+  height: auto;
 }
 
 .database-template .brand-mark {

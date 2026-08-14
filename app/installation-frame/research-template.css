@@ -34,6 +34,14 @@
   padding: 0 0 10px;
   gap: 7px;
   border-bottom: 1px solid #e1e4e6;
+  color: inherit;
+  text-decoration: none;
+}
+
+.installation-scope .side-brand img {
+  display: block;
+  width: 124px;
+  height: auto;
 }
 
 .installation-scope .side-brand > span {

@@ -173,7 +173,7 @@ export function LithiumDashboard() {
   return <main className="planning-shell">
     <div className="planning-layout">
       <aside className="planning-sidebar">
-        <div className="sidebar-brand"><div className="sidebar-logo">{T.brand.slice(0, 2)}</div><div><strong>{T.brand}</strong><small>NEW ENERGY DATA</small></div></div>
+        <a className="sidebar-brand" href="/" aria-label="返回东吴电新数据库首页"><img src="/soochow-securities.png" width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
         <div className="sidebar-rule" />
         <div className="sidebar-block"><label>{T.month}</label><select value={period} onChange={(event) => setPeriod(event.target.value)}>{data.periods.map((item) => <option key={item}>{item}</option>)}</select></div>
         <div className="sidebar-block"><label>{T.segment}</label><div className="segment-buttons">{data.categories.map((item, index) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => { setCategoryKey(item.key); setSelectedCompanyName(""); }}><i style={{ background: palette[index % palette.length] }} />{item.name}</button>)}</div></div>

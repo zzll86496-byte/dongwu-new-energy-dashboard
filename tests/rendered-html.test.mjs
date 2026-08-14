@@ -96,4 +96,13 @@ test("keeps the approved planning template across database interfaces", async ()
   assert.match(sales, /className="sales-sidebar"/);
   assert.match(commercial, /class="sidebar"/);
   assert.doesNotMatch(commercial, /\.sidebar,\.source\{display:none\}/);
+
+  for (const source of [storage, lithium, batteryExport, supply, sales, commercial]) {
+    assert.match(source, /soochow-securities\.png/);
+    assert.match(source, /alt="东吴证券 Soochow Securities"/);
+  }
+
+  const installation = await readFile(new URL("../app/installation-frame/page.tsx", import.meta.url), "utf8");
+  assert.match(installation, /soochow-securities\.png/);
+  assert.match(installation, /alt="东吴证券 Soochow Securities"/);
 });
