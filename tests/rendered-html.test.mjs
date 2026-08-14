@@ -92,6 +92,8 @@ test("keeps the approved planning template across database interfaces", async ()
   assert.match(supply, /className="supply-sidebar"/);
   assert.match(supplyCss, /grid-template-columns:\s*146px minmax\(0, 1fr\)/);
   assert.match(sales, /className="sales-sidebar"/);
+  assert.doesNotMatch(sales, /LONG-CHART CORE|销量长图核心图表|core-chart-heading/);
+  assert.match(sales, /className="core-model-toolbar"/);
   for (const source of [storage, lithium, batteryExport, supply, sales]) {
     assert.match(source, /soochow-securities\.png/);
     assert.match(source, /alt="东吴证券 Soochow Securities"/);

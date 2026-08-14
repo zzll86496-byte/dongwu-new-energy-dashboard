@@ -1,13 +1,6 @@
 .core-chart-section,.core-model-section{margin:20px 0 26px}
-.core-chart-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:12px;padding:18px 20px;border:1px solid #d8e0e5;background:linear-gradient(135deg,#fff 0%,#f4f7f8 100%)}
-.core-chart-heading>div>span{color:#b38c2e;font-size:8px;font-weight:800;letter-spacing:1.4px}
-.core-chart-heading h2{margin:4px 0 2px;color:#173f62;font-size:20px;letter-spacing:.2px}
-.core-chart-heading p{margin:0;color:#6f7c84;font-size:11px}
-.core-chart-heading>strong{display:flex;align-items:baseline;gap:7px;color:#173f62;font-family:Georgia,serif;font-size:34px}
-.core-chart-heading>strong small{color:#7e8a91;font-family:inherit;font-size:10px;font-weight:500}
-.core-model-actions{display:flex;align-items:center;gap:15px}
-.core-model-actions>strong{display:flex;align-items:baseline;gap:6px;color:#173f62;font-family:Georgia,serif;font-size:30px;white-space:nowrap}
-.core-model-actions>strong small{color:#7e8a91;font-family:inherit;font-size:9px;font-weight:500}
+.core-model-toolbar{position:relative;z-index:4;display:flex;justify-content:flex-end;margin-bottom:12px}
+.core-model-toolbar .company-picker{min-width:180px}
 .core-category-tabs{display:flex;gap:6px;overflow:auto;margin-bottom:12px;padding-bottom:2px}
 .core-category-tabs button{border:1px solid #d7e0e4;background:#fff;color:#65747e;padding:7px 13px;font-size:10px;white-space:nowrap;cursor:pointer}
 .core-category-tabs button.active{border-color:#173f62;background:#173f62;color:#fff}
@@ -33,8 +26,6 @@
 .core-chart-card>footer span{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
 .core-chart-card>footer i{color:#8b969c;font-size:8px;font-style:normal}
 .core-chart-card>footer strong{color:#233f52;font-size:10px}
-.core-model-section .core-chart-heading{position:relative;z-index:4}
-.core-model-section .company-picker{min-width:180px}
 .core-model-grid{display:grid;grid-template-columns:minmax(310px,.7fr) minmax(0,1.3fr);gap:12px}
 .core-model-grid>.sales-panel{min-width:0}
 .core-model-range{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap}
@@ -72,12 +63,7 @@
 }
 
 @media(max-width:760px){
-  .core-chart-heading{align-items:flex-start;padding:15px}
-  .core-chart-heading h2{font-size:17px}
-  .core-chart-heading>strong{font-size:26px}
-  .core-model-actions{align-items:flex-end;flex-direction:column;gap:7px}
-  .core-model-actions>strong{font-size:24px}
-  .core-chart-heading .company-picker{min-width:130px}
+  .core-model-toolbar .company-picker{width:100%;min-width:0}
   .core-chart-card>header{flex-direction:column}
   .core-chart-controls{width:100%;justify-content:flex-start}
   .core-chart-controls label{flex:1}

@@ -137,7 +137,6 @@ function CoreChartGallery({ boardKey }: { boardKey: SheetKey }) {
   if (!charts.length) return null;
   const visible = category ? charts.filter(chart => chart.category === category) : charts;
   return <section className="core-chart-section">
-    <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>销量长图核心图表</h2><p>按原长图口径重绘，保留月度量、同比、环比、渗透率及多车型趋势。</p></div><strong>{charts.length}<small>张核心图</small></strong></header>
     {categories.length > 1 && <div className="core-category-tabs">{categories.map(item => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(category === item ? "" : item)}>{item}</button>)}</div>}
     <div className="core-chart-grid">{visible.map(chart => <CoreChartFigure key={chart.id} chart={chart} />)}</div>
   </section>;
@@ -249,7 +248,7 @@ function ModelCoreSpotlight({ scope }: { scope: Scope }) {
   const selectedSeries = companies.filter(item => selected.includes(item.name));
   const trendPeriods = modelData.periods.slice(trendStart, trendEnd + 1);
   return <section className="core-model-section">
-    <header className="core-chart-heading"><div><span>LONG-CHART CORE</span><h2>分车型【{scope === "wholesale" ? "批发" : "零售"}】核心图表</h2><p>车企横向对比、多车企历史趋势，以及单一车企旗下可选车型走势。</p></div><div className="core-model-actions"><strong>3<small>张核心图</small></strong><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div></header>
+    <div className="core-model-toolbar"><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div>
     <div className="core-model-grid">
       <article className="sales-panel"><header><div><span>时间点横向对比</span><h2>{modelData.periods[rankingIndex]} 车企销量排名</h2></div><label className="core-single-period">时间<select value={rankingIndex} onChange={event => setRankingIndex(Number(event.target.value))}>{modelData.periods.map((period, index) => <option key={period} value={index}>{period}</option>)}</select></label></header><SnapshotBars percent={false} rows={latestRanking.slice(0, 15).map(item => ({ name: item.name, value: item.values[rankingIndex] }))} /></article>
       <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><label>起始<select value={trendStart} onChange={event => { const next = Number(event.target.value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }}>{modelData.periods.map((period, index) => <option key={`model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select value={trendEnd} onChange={event => { const next = Number(event.target.value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }}>{modelData.periods.map((period, index) => <option key={`model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} modelStyle /></article>
