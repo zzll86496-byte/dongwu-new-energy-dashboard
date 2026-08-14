@@ -136,9 +136,14 @@ function CoreChartGallery({ boardKey }: { boardKey: SheetKey }) {
   useEffect(() => setCategory(""), [boardKey]);
   if (!charts.length) return null;
   const visible = category ? charts.filter(chart => chart.category === category) : charts;
+  const gridClassName = visible.length === 1
+    ? "core-chart-grid core-chart-grid--single"
+    : visible.length % 2 === 1
+      ? "core-chart-grid core-chart-grid--three-tail"
+      : "core-chart-grid";
   return <section className="core-chart-section">
     {categories.length > 1 && <div className="core-category-tabs">{categories.map(item => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(category === item ? "" : item)}>{item}</button>)}</div>}
-    <div className="core-chart-grid">{visible.map(chart => <CoreChartFigure key={chart.id} chart={chart} />)}</div>
+    <div className={gridClassName}>{visible.map(chart => <CoreChartFigure key={chart.id} chart={chart} />)}</div>
   </section>;
 }
 

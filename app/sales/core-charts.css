@@ -4,8 +4,10 @@
 .core-category-tabs{display:flex;gap:6px;overflow:auto;margin-bottom:12px;padding-bottom:2px}
 .core-category-tabs button{border:1px solid #d7e0e4;background:#fff;color:#65747e;padding:7px 13px;font-size:10px;white-space:nowrap;cursor:pointer}
 .core-category-tabs button.active{border-color:#173f62;background:#173f62;color:#fff}
-.core-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.core-chart-card{min-width:0;border:1px solid #d8e0e5;background:#fff;box-shadow:0 4px 16px rgba(23,63,98,.045)}
+.core-chart-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.core-chart-card{grid-column:span 3;min-width:0;border:1px solid #d8e0e5;background:#fff;box-shadow:0 4px 16px rgba(23,63,98,.045)}
+.core-chart-grid--three-tail .core-chart-card:nth-last-child(-n+3){grid-column:span 2}
+.core-chart-grid--single .core-chart-card{grid-column:1/-1}
 .core-chart-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:15px 17px 7px}
 .core-chart-card>header span{color:#a4873e;font-size:8px;font-weight:800;letter-spacing:1px}
 .core-chart-card>header h3{margin:3px 0 0;color:#173f62;font-size:15px}
@@ -60,6 +62,7 @@
 
 @media(max-width:1100px){
   .core-chart-grid,.core-model-grid{grid-template-columns:1fr}
+  .core-chart-grid .core-chart-card,.core-chart-grid--three-tail .core-chart-card:nth-last-child(-n+3),.core-chart-grid--single .core-chart-card{grid-column:1/-1}
 }
 
 @media(max-width:760px){

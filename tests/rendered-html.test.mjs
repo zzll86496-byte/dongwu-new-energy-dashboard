@@ -72,7 +72,7 @@ test("keeps all six database routes and the branded asset", async () => {
 });
 
 test("keeps the approved planning template across database interfaces", async () => {
-  const [sharedCss, storage, lithium, batteryExport, installationCss, supply, supplyCss, sales] = await Promise.all([
+  const [sharedCss, storage, lithium, batteryExport, installationCss, supply, supplyCss, sales, salesCoreCss] = await Promise.all([
     readFile(new URL("../app/research-template.css", import.meta.url), "utf8"),
     readFile(new URL("../app/DatabasePage.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/LithiumDashboard.tsx", import.meta.url), "utf8"),
@@ -81,6 +81,7 @@ test("keeps the approved planning template across database interfaces", async ()
     readFile(new URL("../app/vehicle-supply-frame/VehicleSupplyDashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/vehicle-supply-frame/research-template.css", import.meta.url), "utf8"),
     readFile(new URL("../app/sales/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/sales/core-charts.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(sharedCss, /--research-navy:\s*#153e6c/);
@@ -94,6 +95,8 @@ test("keeps the approved planning template across database interfaces", async ()
   assert.match(sales, /className="sales-sidebar"/);
   assert.doesNotMatch(sales, /LONG-CHART CORE|销量长图核心图表|core-chart-heading/);
   assert.match(sales, /className="core-model-toolbar"/);
+  assert.match(sales, /core-chart-grid--three-tail/);
+  assert.match(salesCoreCss, /nth-last-child\(-n\+3\)\{grid-column:span 2\}/);
   for (const source of [storage, lithium, batteryExport, supply, sales]) {
     assert.match(source, /soochow-securities\.png/);
     assert.match(source, /alt="东吴证券 Soochow Securities"/);
