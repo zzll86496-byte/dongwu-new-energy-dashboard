@@ -25,7 +25,7 @@ type GlobalMarketsDataset = { source: string; scopes: Record<MarketScope, Market
 const domesticMakerData = domesticMakerSource as DomesticMakerDataset;
 const globalMarketsData = globalMarketsSource as GlobalMarketsDataset;
 const domesticCompanies = domesticMakerData.companies.filter(company => company.name !== "其他").map(company => company.name);
-const domesticColors = ["#00215D", "#A9974F", "#7F8B97", "#007BC5", "#F47A2A", "#8FB9D1", "#2B7A66", "#526A82", "#6F7F55", "#9A7F55", "#4E6FA3", "#826A8C"];
+const domesticColors = ["#153b68", "#ae9a57", "#8994a2", "#d27b36", "#557d8c", "#7d6f91", "#4f8290", "#bf6d6d", "#6f8752", "#9a7f55", "#5270a3", "#9a668c"];
 const domesticMaker = (name: string) => domesticMakerData.companies.find(company => company.name === name)!;
 const domesticColor = (name: string) => name === "其他" ? "#cbd3dd" : domesticColors[Math.max(0, domesticCompanies.indexOf(name)) % domesticColors.length];
 
@@ -61,8 +61,8 @@ type StructureDataset = {
 };
 const structureData = structureSource as StructureDataset;
 const structureColors: Record<string, string> = {
-  "乘用车": "#00215D", "客车": "#A9974F", "专用车": "#7F8B97",
-  "磷酸铁锂": "#00215D", "三元": "#A9974F", "其他": "#7F8B97", "装机量": "#00215D",
+  "乘用车": "#153b68", "客车": "#ae9a57", "专用车": "#8994a2",
+  "磷酸铁锂": "#153b68", "三元": "#ae9a57", "其他": "#8994a2", "装机量": "#153b68",
 };
 
 const metricMeta: Record<VehicleMetric, { name: string; unit: string }> = {
@@ -83,7 +83,7 @@ function HorizontalBars({ rows, unit, formatter }: { rows: { label: string; valu
 
 function BatteryColumnBars({ rows }: { rows: { label: string; value: number }[] }) {
   const max = Math.max(...rows.map(row => row.value), 1);
-  const colors = ["#00215D", "#A9974F", "#7F8B97", "#8FB9D1"];
+  const colors = ["#153b68", "#ae9a57", "#8994a2", "#6f879d"];
   return <div className="battery-column-chart">
     <div className="battery-column-gridlines">{[0, 25, 50, 75, 100].map(value => <i key={value} style={{ bottom: `${value}%` }} />)}</div>
     <div className="battery-columns">{rows.map((row, index) => {
@@ -96,7 +96,7 @@ function BatteryColumnBars({ rows }: { rows: { label: string; value: number }[] 
   </div>;
 }
 
-const batteryLineColors = ["#00215D", "#A9974F", "#7F8B97", "#007BC5", "#F47A2A", "#8FB9D1"];
+const batteryLineColors = ["#153b68", "#ae9a57", "#8994a2", "#6f879d", "#d27b36", "#557d8c"];
 
 function BatteryTypeLineChart({ types }: { types: string[] }) {
   const allYears = installSummary.years;
@@ -172,7 +172,7 @@ function BatteryTypeLineChart({ types }: { types: string[] }) {
 
 function YearBars({ rows, unit, formatter, choices, selected, onSelect }: { rows: { year: string; value: number; period: string }[]; unit: string; formatter?: (v: number) => string; choices?: string[]; selected?: string; onSelect?: (value: string) => void }) {
   const max = Math.max(...rows.map(r => r.value), 1);
-  const colors = ["#00215D", "#A9974F", "#7F8B97"];
+  const colors = ["#153b68", "#ae9a57", "#929497"];
   return <div className="year-chart">{choices && onSelect && <div className="chart-type-picker" role="group" aria-label="选择分析类型">{choices.map(choice => <button type="button" key={choice} className={selected === choice ? "active" : ""} onClick={() => onSelect(choice)}>{choice}</button>)}</div>}<div className="year-grid">{rows.map((row, index) => <div className="year-column" key={row.year} title={`${row.year} ${row.period}`}>
     <div><i style={{ height: `${Math.max(row.value > 0 ? 2 : 0, row.value / max * 100)}%`, background: colors[index % colors.length] }}><b>{formatter ? formatter(row.value) : row.value.toFixed(1)}</b></i></div><span>{row.year}{row.year === "2026" && <em>1-5月</em>}</span>
   </div>)}</div><small className="chart-unit">单位：{unit}</small></div>;

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
-import "./research-system.css";
 
 const siteTitle = "东吴电新｜新能源产业链数据库研究索引";
 const siteDescription = "面向东吴电新行业研究人员的新能源产业链数据库总站，快速查找数据库、确认更新状态并进入数据查询。";

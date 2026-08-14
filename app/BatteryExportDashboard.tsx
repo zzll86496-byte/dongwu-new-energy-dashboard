@@ -4,14 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import rawData from "./data/battery-export.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "./excel-export";
 import "./export.css";
-import "./research-system.css";
 
 type Metric = { period:string; amount:number|null; mom:number|null; yoy:number|null; cumulative:number|null; cumulativeYoy:number|null; quantity:number|null; quantityMom:number|null; quantityYoy:number|null; unitPrice:number|null; unitMom:number|null; unitYoy:number|null };
 type Entity = { name:string; values:Metric[] };
 type ExportData = { meta:{ title:string; source:string; latestPeriod:string; updated:string; unit:string; note:string }; periods:string[]; totals:Metric[]; dimensions:{ countries:Entity[]; provinces:Entity[]; continents:Entity[] } };
 
 const data = rawData as ExportData;
-const colors = ["#00215D", "#A9974F", "#7F8B97", "#007BC5", "#F47A2A", "#8FB9D1"];
+const colors = ["#12355e", "#a99b5a", "#8c8c8e", "#6f7d8c", "#ed7d31", "#c9c9c9"];
 const labels = { countries:"目的国", provinces:"出发省份", continents:"洲别" } as const;
 const fmt = (value:number|null|undefined, digits=1) => value == null ? "—" : value.toLocaleString("zh-CN", { minimumFractionDigits:digits, maximumFractionDigits:digits });
 const pct = (value:number|null|undefined) => value == null ? "—" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
