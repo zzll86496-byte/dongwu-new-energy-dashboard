@@ -1,0 +1,193 @@
+/* Installation database alignment with the approved planning dashboard. */
+.installation-scope {
+  --template-navy: #153e6c;
+  --template-ink: #172431;
+  --template-muted: #7b8792;
+  --template-line: #d5dadd;
+  --template-canvas: #f5f6f7;
+  --template-shadow: 0 2px 7px rgba(32, 47, 59, 0.13);
+  background: var(--template-canvas);
+  color: var(--template-ink);
+}
+
+.installation-scope .app-frame {
+  grid-template-columns: 146px minmax(0, 1fr);
+  gap: 0;
+  min-height: 100vh;
+}
+
+.installation-scope .side-panel {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 10px;
+  border: 0;
+  border-right: 1px solid #d6dade;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 1px 0 5px rgba(24, 40, 56, 0.05);
+}
+
+.installation-scope .side-brand {
+  height: auto;
+  padding: 0 0 10px;
+  gap: 7px;
+  border-bottom: 1px solid #e1e4e6;
+}
+
+.installation-scope .side-brand > span {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 2px;
+  background: var(--template-navy);
+  font-size: 9px;
+}
+
+.installation-scope .side-brand div {
+  margin-left: 0;
+}
+
+.installation-scope .side-brand b {
+  color: #262626;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.installation-scope .side-brand small {
+  margin-top: 2px;
+  color: #7d8790;
+  font-size: 5.5px;
+  letter-spacing: 0.3px;
+}
+
+.installation-scope .side-label {
+  margin: 15px 3px 6px;
+  color: #293845;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.installation-scope .side-nav {
+  gap: 2px;
+}
+
+.installation-scope .side-nav button {
+  min-height: 34px;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #5d6873;
+}
+
+.installation-scope .side-nav button:hover,
+.installation-scope .side-nav button.active {
+  color: var(--template-navy);
+  background: #e7ebee;
+  box-shadow: none;
+}
+
+.installation-scope .side-nav button.active {
+  border-color: #d7dde1;
+}
+
+.installation-scope .side-nav button > i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  background: var(--template-navy);
+}
+
+.installation-scope .side-nav button > span {
+  margin-left: 7px;
+}
+
+.installation-scope .side-nav button b {
+  font-size: 9px;
+}
+
+.installation-scope .side-nav button small,
+.installation-scope .side-nav button.active small {
+  margin-top: 2px;
+  color: #8a949c;
+  font-size: 6px;
+}
+
+.installation-scope .side-current {
+  margin: 18px 3px 0;
+  padding: 11px 7px 0;
+  border-top: 1px solid #e1e4e6;
+}
+
+.installation-scope .side-current span,
+.installation-scope .side-current small {
+  color: #7d8790;
+  font-size: 6px;
+}
+
+.installation-scope .side-current b {
+  min-height: 0;
+  margin: 5px 0 3px;
+  padding: 0;
+  border: 0;
+  color: #33434f;
+  background: transparent;
+  font-size: 8px;
+}
+
+.installation-scope .workspace {
+  padding: 0 14px;
+  background: var(--template-canvas);
+}
+
+.installation-scope .panel,
+.installation-scope .dashboard-panel,
+.installation-scope .summary-kpis article,
+.installation-scope .kpi,
+.installation-scope .structure-kpis article,
+.installation-scope .maker-control-card {
+  border-color: var(--template-line);
+  border-radius: 7px;
+  box-shadow: var(--template-shadow);
+}
+
+.installation-scope button:focus-visible,
+.installation-scope select:focus-visible,
+.installation-scope input:focus-visible {
+  outline: 2px solid var(--template-navy);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .installation-scope .app-frame {
+    grid-template-columns: 1fr;
+  }
+
+  .installation-scope .side-panel {
+    position: relative;
+    height: auto;
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid #d6dade;
+  }
+
+  .installation-scope .side-label,
+  .installation-scope .side-current {
+    display: none;
+  }
+
+  .installation-scope .side-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .installation-scope .workspace {
+    padding: 0 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .installation-scope * {
+    transition-duration: 0.01ms !important;
+  }
+}

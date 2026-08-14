@@ -7,6 +7,7 @@ import "./sales.css";
 import "./raw.css";
 import "./sheets.css";
 import "./core-charts.css";
+import "../research-template.css";
 
 type Scope = "wholesale" | "retail";
 type SheetKey = "wholesale-industry" | "wholesale-models" | "retail-industry" | "retail-models";

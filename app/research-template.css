@@ -1,0 +1,504 @@
+/*
+ * Shared visual shell derived from the approved lithium planning dashboard.
+ * Page-specific data structures stay untouched; this file only aligns the
+ * research navigation rail, surfaces, controls, spacing and chart chrome.
+ */
+
+:root {
+  --research-navy: #153e6c;
+  --research-ink: #172431;
+  --research-muted: #7b8792;
+  --research-line: #d5dadd;
+  --research-canvas: #f5f6f7;
+  --research-panel: #ffffff;
+  --research-gold: #a99b5a;
+  --research-orange: #ed7d31;
+  --research-gray: #8c8c8e;
+  --research-shadow: 0 2px 7px rgba(32, 47, 59, 0.13);
+}
+
+.database-template,
+.export-shell,
+.sales-shell {
+  color: var(--research-ink);
+  background: var(--research-canvas);
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+}
+
+.database-template button:focus-visible,
+.database-template select:focus-visible,
+.export-shell button:focus-visible,
+.export-shell select:focus-visible,
+.sales-shell button:focus-visible,
+.sales-shell select:focus-visible,
+.sales-shell input:focus-visible {
+  outline: 2px solid var(--research-navy);
+  outline-offset: 2px;
+}
+
+/* Storage database: replace the former dark rail with the planning template. */
+.database-template > .sidebar {
+  position: sticky;
+  top: 0;
+  width: 146px;
+  min-width: 146px;
+  height: 100vh;
+  padding: 10px;
+  color: #405064;
+  background: #fff;
+  border-right: 1px solid #d6dade;
+  box-shadow: 1px 0 5px rgba(24, 40, 56, 0.05);
+}
+
+.database-template .brand {
+  gap: 7px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #e1e4e6;
+}
+
+.database-template .brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 2px;
+  color: #fff;
+  background: var(--research-navy);
+  font-size: 9px;
+}
+
+.database-template .brand strong {
+  color: #262626;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.database-template .brand small {
+  margin-top: 2px;
+  color: #7d8790;
+  font-size: 5.5px;
+  letter-spacing: 0.3px;
+}
+
+.database-template .side-label {
+  margin: 15px 3px 6px;
+  color: #293845;
+  font-size: 9px;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+
+.database-template .sidebar nav {
+  gap: 2px;
+}
+
+.database-template .sidebar nav button {
+  grid-template-columns: 7px 1fr;
+  gap: 7px;
+  min-height: 34px;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #5d6873;
+}
+
+.database-template .sidebar nav button:hover,
+.database-template .sidebar nav button.active {
+  color: var(--research-navy);
+  background: #e7ebee;
+  box-shadow: none;
+}
+
+.database-template .sidebar nav button.active {
+  border-color: #d7dde1;
+}
+
+.database-template .sidebar nav span b {
+  font-size: 9px;
+}
+
+.database-template .sidebar nav span small {
+  margin-top: 2px;
+  color: #8a949c;
+  font-size: 6px;
+}
+
+.database-template .sidebar nav em {
+  display: none;
+}
+
+.database-template .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--research-navy) !important;
+}
+
+.database-template .side-source {
+  margin: 18px 3px 0;
+  padding: 11px 7px 0;
+  border-top: 1px solid #e1e4e6;
+  color: #7d8790;
+  font-size: 6.5px;
+}
+
+.database-template .side-source strong,
+.database-template .side-bottom b {
+  color: #33434f;
+  font-size: 8px;
+}
+
+.database-template .side-bottom {
+  bottom: 12px;
+  left: 13px;
+  color: #8a939a;
+  font-size: 6px;
+}
+
+.database-template > .workspace {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  column-gap: 10px;
+  align-content: start;
+  padding: 12px 14px;
+  background: var(--research-canvas);
+}
+
+.database-template .topbar {
+  grid-column: 1;
+  grid-row: 1;
+  display: block;
+  min-width: 0;
+  margin: 0;
+  align-self: center;
+}
+
+.database-template .topbar p {
+  margin-bottom: 3px;
+  font-size: 7px;
+  letter-spacing: 0.13em;
+}
+
+.database-template .topbar h1 {
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  font-size: 23px;
+  font-weight: 600;
+}
+
+.database-template .topbar > div > span {
+  margin-top: 3px;
+  font-size: 8px;
+}
+
+.database-template .update-badge {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  gap: 2px 7px;
+  min-width: 0;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border: 1px solid #c8c8c8;
+  border-left: 1px solid #c8c8c8;
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+.database-template .update-badge small,
+.database-template .update-badge span {
+  font-size: 6px;
+}
+
+.database-template .update-badge strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  margin: 0;
+  color: var(--research-navy);
+  font-size: 10px;
+}
+
+.database-template .kpi-row {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  gap: 7px;
+  align-self: start;
+}
+
+.database-template .kpi,
+.database-template .panel {
+  border-color: var(--research-line);
+  border-radius: 7px;
+  box-shadow: var(--research-shadow);
+}
+
+.database-template .kpi {
+  min-height: 66px;
+  padding: 8px 10px;
+}
+
+.database-template .kpi.active {
+  border-color: #bfc8ce;
+  box-shadow: inset 0 -4px 0 var(--research-navy), var(--research-shadow);
+}
+
+.database-template .kpi > small {
+  font-size: 7px;
+}
+
+.database-template .kpi > div {
+  margin: 5px 0 3px;
+}
+
+.database-template .kpi strong {
+  font-size: 20px;
+}
+
+.database-template .kpi span,
+.database-template .kpi p {
+  font-size: 6.5px;
+}
+
+.database-template .content-grid {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.database-template .panel {
+  padding: 10px;
+}
+
+.database-template .panel-title span {
+  color: var(--research-gold);
+}
+
+.database-template > .workspace > footer {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: none;
+}
+
+/* Export database already shares the reference structure; normalize its rail. */
+.export-shell .export-sidebar {
+  border-radius: 0;
+}
+
+.export-shell .export-brand > span,
+.export-shell .export-side-block nav i {
+  background: var(--research-navy);
+}
+
+.export-shell .export-side-block nav button:hover,
+.export-shell .export-side-block nav button.active {
+  color: var(--research-navy);
+  background: #e7ebee;
+}
+
+.export-shell .export-kpis article,
+.export-shell .export-card {
+  border-color: var(--research-line);
+  box-shadow: var(--research-shadow);
+}
+
+/* Vehicle sales: same white filter rail and quiet research surfaces. */
+.sales-shell .sales-sidebar {
+  width: 146px;
+  min-width: 146px;
+  padding: 10px;
+  color: #405064;
+  background: #fff;
+  border-right: 1px solid #d6dade;
+  box-shadow: 1px 0 5px rgba(24, 40, 56, 0.05);
+}
+
+.sales-shell .sales-brand {
+  gap: 7px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #e1e4e6;
+}
+
+.sales-shell .sales-brand > span {
+  width: 30px;
+  height: 30px;
+  border-radius: 2px;
+  color: #fff;
+  background: var(--research-navy);
+  font-size: 9px;
+}
+
+.sales-shell .sales-brand strong {
+  color: #262626;
+  font-size: 12px;
+}
+
+.sales-shell .sales-brand small {
+  margin-top: 2px;
+  color: #7d8790;
+  font-size: 5.5px;
+  letter-spacing: 0.3px;
+}
+
+.sales-shell .sales-sidebar > p {
+  margin: 15px 3px 6px;
+  color: #293845;
+  font-size: 9px;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+
+.sales-shell .sales-sidebar nav {
+  gap: 2px;
+}
+
+.sales-shell .sales-sidebar nav button {
+  grid-template-columns: 7px 1fr;
+  gap: 7px;
+  min-height: 34px;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #5d6873;
+}
+
+.sales-shell .sales-sidebar nav button:hover,
+.sales-shell .sales-sidebar nav button.active {
+  color: var(--research-navy);
+  background: #e7ebee;
+  box-shadow: none;
+}
+
+.sales-shell .sales-sidebar nav button.active {
+  border-color: #d7dde1;
+}
+
+.sales-shell .sales-sidebar nav i {
+  width: 6px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 50%;
+  color: transparent;
+  background: var(--research-navy);
+  font-size: 0;
+}
+
+.sales-shell .sales-sidebar nav b {
+  color: inherit;
+  font-size: 9px;
+}
+
+.sales-shell .sales-sidebar nav small,
+.sales-shell .sales-sidebar nav button.active small {
+  margin-top: 2px;
+  color: #8a949c;
+  font-size: 6px;
+}
+
+.sales-shell .sales-current {
+  margin: 18px 3px 0;
+  padding: 11px 7px 0;
+  border-top: 1px solid #e1e4e6;
+}
+
+.sales-shell .sales-current span,
+.sales-shell .sales-current small {
+  color: #7d8790;
+  font-size: 6px;
+}
+
+.sales-shell .sales-current b {
+  color: #33434f;
+  font-size: 8px;
+}
+
+.sales-shell .back-home {
+  left: 13px;
+  bottom: 12px;
+  color: #7d8790;
+  font-size: 7px;
+}
+
+.sales-shell .back-home:hover {
+  color: var(--research-navy);
+}
+
+.sales-shell .sales-workspace {
+  padding: 12px 14px;
+  background: var(--research-canvas);
+}
+
+.sales-shell .sales-topbar h1 {
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  font-size: 23px;
+  font-weight: 600;
+}
+
+.sales-shell .sales-kpi,
+.sales-shell .sales-panel,
+.sales-shell .model-toolbar {
+  border-color: var(--research-line);
+  border-radius: 7px;
+  box-shadow: var(--research-shadow);
+}
+
+.sales-shell .sales-kpi strong,
+.sales-shell .sales-panel h2 {
+  color: var(--research-ink);
+}
+
+@media (max-width: 900px) {
+  .database-template,
+  .sales-shell {
+    display: block;
+  }
+
+  .database-template > .sidebar,
+  .sales-shell .sales-sidebar {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+  }
+
+  .database-template .sidebar nav,
+  .sales-shell .sales-sidebar nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .database-template .side-source,
+  .database-template .side-bottom,
+  .sales-shell .sales-current,
+  .sales-shell .back-home {
+    display: none;
+  }
+
+  .database-template > .workspace {
+    display: block;
+    padding: 10px;
+  }
+
+  .database-template .kpi-row,
+  .database-template .content-grid {
+    margin-top: 10px;
+  }
+
+  .sales-shell .sales-dashboard-grid,
+  .sales-shell .sales-kpi-grid,
+  .sales-shell .sales-topbar,
+  .sales-shell .model-toolbar {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .database-template *,
+  .export-shell *,
+  .sales-shell * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

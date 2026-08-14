@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { dashboardData } from "./dashboard-data";
 import { exportChartWorkbook } from "./excel-export";
+import "./research-template.css";
 
 type Point = [string, number | null];
 type Entity = { name: string; values: Point[] };
@@ -221,7 +222,7 @@ export default function Page() {
     </>;
   };
 
-  return <main className="app-shell">
+  return <main className="app-shell database-template">
     <aside className="sidebar">
       <div className="brand"><div className="brand-mark">东吴</div><div><strong>东吴电新</strong><small>NEW ENERGY DATA</small></div></div>
       <p className="side-label">数据模块</p>

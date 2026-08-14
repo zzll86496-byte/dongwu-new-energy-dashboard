@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./installation.css";
 import "./install-summary.css";
+import "./research-template.css";
 
 export const metadata: Metadata = {
   title: "电动车装机数据库 · 核心长图 · 5000",

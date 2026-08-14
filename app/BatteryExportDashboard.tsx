@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import rawData from "./data/battery-export.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "./excel-export";
 import "./export.css";
+import "./research-template.css";
 
 type Metric = { period:string; amount:number|null; mom:number|null; yoy:number|null; cumulative:number|null; cumulativeYoy:number|null; quantity:number|null; quantityMom:number|null; quantityYoy:number|null; unitPrice:number|null; unitMom:number|null; unitYoy:number|null };
 type Entity = { name:string; values:Metric[] };

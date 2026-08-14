@@ -492,15 +492,21 @@ export default function Dashboard() {
   const snapshot = view.snapshots[period] || view.snapshots[historyData.lastPeriod];
   const trend = view.trend.filter(row => row.period <= period).slice(-13);
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <div className="brand"><span>DONGWU NEW ENERGY · SUPPLY DASHBOARD</span><h1>动力电池车企配套数据库</h1><p>国内装机 · {period} · {category} · GWh</p></div>
-        <nav aria-label="仪表盘页面">{NAV.map(item=><button key={item.key} onClick={()=>setPage(item.key)} className={page===item.key?"selected":""}><b>{item.label}</b><small>{item.note}</small></button>)}</nav>
-        <div className="top-actions"><select aria-label="车辆类别" value={category} onChange={event=>setCategory(event.target.value)}>{historyData.categoryOptions.map(item=><option value={item} key={item}>{item}</option>)}</select><select aria-label="数据月份" value={period} onChange={event=>setPeriod(event.target.value)}>{[...historyData.periods].reverse().map(item=><option value={item} key={item}>{periodText(item)}</option>)}</select></div>
-      </header>
-      <div className="page-title"><div><span>{String(NAV.findIndex(x=>x.key===page)+1).padStart(2,"0")}</span><h2>{current.label}</h2><p>{current.note} · {periodText(period)} · {category}</p></div><div className="data-badge"><i/>历史数据已连接 <b>{historyData.sourceRows.toLocaleString()}</b> 条</div></div>
-      <div className="content">{page==="overview"?<OverviewPage snapshot={snapshot} trend={trend} period={period}/>:page==="relations"?<RelationsPage snapshot={snapshot} period={period}/>:<CompanyPage snapshot={snapshot} period={period} companies={view.companies}/>}</div>
-      <footer>东吴电新 · 动力电池配套关系数据库可视化初稿 <span>数据范围 {historyData.firstPeriod}—{historyData.lastPeriod}</span></footer>
+    <main className="app-shell supply-template">
+      <aside className="supply-sidebar">
+        <a className="supply-brand" href="/"><span>东吴</span><div><strong>东吴电新</strong><small>NEW ENERGY DATA</small></div></a>
+        <div className="supply-filter"><label>分析月份</label><select aria-label="数据月份" value={period} onChange={event=>setPeriod(event.target.value)}>{[...historyData.periods].reverse().map(item=><option value={item} key={item}>{periodText(item)}</option>)}</select></div>
+        <div className="supply-filter"><label>车辆类别</label><select aria-label="车辆类别" value={category} onChange={event=>setCategory(event.target.value)}>{historyData.categoryOptions.map(item=><option value={item} key={item}>{item}</option>)}</select></div>
+        <div className="supply-nav-block"><label>分析维度</label><nav className="supply-nav" aria-label="仪表盘页面">{NAV.map(item=><button key={item.key} onClick={()=>setPage(item.key)} className={page===item.key?"selected":""}><span><b>{item.label}</b><small>{item.note}</small></span></button>)}</nav></div>
+        <div className="supply-current"><span>当前选择</span><strong>{current.label}</strong><small>{periodText(period)} · {category}</small></div>
+        <div className="supply-source">数据范围<br/><b>{historyData.firstPeriod}—{historyData.lastPeriod}</b></div>
+      </aside>
+      <section className="supply-main">
+        <header className="topbar"><div className="brand"><span>DONGWU NEW ENERGY · SUPPLY DASHBOARD</span><h1>动力电池车企配套数据库</h1><p>国内装机 · {period} · {category} · GWh</p></div></header>
+        <div className="page-title"><div><span>{String(NAV.findIndex(x=>x.key===page)+1).padStart(2,"0")}</span><h2>{current.label}</h2><p>{current.note} · {periodText(period)} · {category}</p></div><div className="data-badge"><i/>历史数据已连接 <b>{historyData.sourceRows.toLocaleString()}</b> 条</div></div>
+        <div className="content">{page==="overview"?<OverviewPage snapshot={snapshot} trend={trend} period={period}/>:page==="relations"?<RelationsPage snapshot={snapshot} period={period}/>:<CompanyPage snapshot={snapshot} period={period} companies={view.companies}/>}</div>
+        <footer>东吴电新 · 动力电池配套关系数据库可视化初稿 <span>数据范围 {historyData.firstPeriod}—{historyData.lastPeriod}</span></footer>
+      </section>
     </main>
   );
 }

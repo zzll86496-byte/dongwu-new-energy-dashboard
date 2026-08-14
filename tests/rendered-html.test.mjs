@@ -71,3 +71,29 @@ test("keeps all seven database routes and the branded asset", async () => {
   assert.match(layout, /<html lang="zh-CN">/);
   assert.doesNotMatch(layout, /Geist|next\/font\/google/);
 });
+
+test("keeps the approved planning template across database interfaces", async () => {
+  const [sharedCss, storage, lithium, batteryExport, installationCss, supply, supplyCss, sales, commercial] = await Promise.all([
+    readFile(new URL("../app/research-template.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/DatabasePage.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/LithiumDashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/BatteryExportDashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/installation-frame/research-template.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/vehicle-supply-frame/VehicleSupplyDashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/vehicle-supply-frame/research-template.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/sales/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../public/commercial-vehicle-dashboard.html", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(sharedCss, /--research-navy:\s*#153e6c/);
+  assert.match(sharedCss, /width:\s*146px/);
+  assert.match(storage, /className="app-shell database-template"/);
+  assert.match(lithium, /className="planning-sidebar"/);
+  assert.match(batteryExport, /className="export-sidebar"/);
+  assert.match(installationCss, /grid-template-columns:\s*146px minmax\(0, 1fr\)/);
+  assert.match(supply, /className="supply-sidebar"/);
+  assert.match(supplyCss, /grid-template-columns:\s*146px minmax\(0, 1fr\)/);
+  assert.match(sales, /className="sales-sidebar"/);
+  assert.match(commercial, /class="sidebar"/);
+  assert.doesNotMatch(commercial, /\.sidebar,\.source\{display:none\}/);
+});

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import VehicleSupplyDashboard from "./VehicleSupplyDashboard";
 import dashboardCss from "./vehicle-supply.css?raw";
+import templateCss from "./research-template.css?raw";
 
 const hostCss = `
   :host {
@@ -28,7 +29,7 @@ export default function VehicleSupplyFramePage() {
     shadowRoot.replaceChildren();
 
     const style = document.createElement("style");
-    style.textContent = hostCss + dashboardCss;
+    style.textContent = hostCss + dashboardCss + templateCss;
 
     const mount = document.createElement("div");
     shadowRoot.append(style, mount);
