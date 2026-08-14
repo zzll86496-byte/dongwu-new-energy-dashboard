@@ -42,7 +42,7 @@ test("server-renders the Soochow research database index", async () => {
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Building your site/);
 });
 
-test("keeps all seven database routes and the branded asset", async () => {
+test("keeps all six database routes and the branded asset", async () => {
   const [page, css, layout] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/portal-home.css", import.meta.url), "utf8"),
@@ -54,7 +54,6 @@ test("keeps all seven database routes and the branded asset", async () => {
     "/database",
     "/lithium",
     "/battery-export",
-    "/commercial-vehicle",
     "/vehicle-supply",
     "/installation",
     "/sales",
@@ -66,14 +65,14 @@ test("keeps all seven database routes and the branded asset", async () => {
   assert.doesNotMatch(page, /index:|→|simple-search|useState|useMemo/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
   assert.match(css, /:focus-visible/);
-  assert.match(css, /database-portal__card:nth-child\(7\)/);
-  assert.match(css, /grid-column:\s*3\s*\/\s*span\s*2/);
+  assert.doesNotMatch(page, /commercial-vehicle|商用车数据库/);
+  assert.doesNotMatch(css, /database-portal__card:nth-child\(7\)/);
   assert.match(layout, /<html lang="zh-CN">/);
   assert.doesNotMatch(layout, /Geist|next\/font\/google/);
 });
 
 test("keeps the approved planning template across database interfaces", async () => {
-  const [sharedCss, storage, lithium, batteryExport, installationCss, supply, supplyCss, sales, commercial] = await Promise.all([
+  const [sharedCss, storage, lithium, batteryExport, installationCss, supply, supplyCss, sales] = await Promise.all([
     readFile(new URL("../app/research-template.css", import.meta.url), "utf8"),
     readFile(new URL("../app/DatabasePage.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/LithiumDashboard.tsx", import.meta.url), "utf8"),
@@ -82,7 +81,6 @@ test("keeps the approved planning template across database interfaces", async ()
     readFile(new URL("../app/vehicle-supply-frame/VehicleSupplyDashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/vehicle-supply-frame/research-template.css", import.meta.url), "utf8"),
     readFile(new URL("../app/sales/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../public/commercial-vehicle-dashboard.html", import.meta.url), "utf8"),
   ]);
 
   assert.match(sharedCss, /--research-navy:\s*#153e6c/);
@@ -94,10 +92,7 @@ test("keeps the approved planning template across database interfaces", async ()
   assert.match(supply, /className="supply-sidebar"/);
   assert.match(supplyCss, /grid-template-columns:\s*146px minmax\(0, 1fr\)/);
   assert.match(sales, /className="sales-sidebar"/);
-  assert.match(commercial, /class="sidebar"/);
-  assert.doesNotMatch(commercial, /\.sidebar,\.source\{display:none\}/);
-
-  for (const source of [storage, lithium, batteryExport, supply, sales, commercial]) {
+  for (const source of [storage, lithium, batteryExport, supply, sales]) {
     assert.match(source, /soochow-securities\.png/);
     assert.match(source, /alt="东吴证券 Soochow Securities"/);
   }
@@ -105,4 +100,5 @@ test("keeps the approved planning template across database interfaces", async ()
   const installation = await readFile(new URL("../app/installation-frame/page.tsx", import.meta.url), "utf8");
   assert.match(installation, /soochow-securities\.png/);
   assert.match(installation, /alt="东吴证券 Soochow Securities"/);
+  await assert.rejects(access(new URL("public/commercial-vehicle-dashboard.html", projectRoot)));
 });

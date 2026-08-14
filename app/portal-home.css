@@ -128,10 +128,6 @@
   transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
-.database-portal__card:nth-child(7) {
-  grid-column: 3 / span 2;
-}
-
 .database-portal__card span {
   font-size: clamp(16px, 1.22vw, 19px);
   font-weight: 700;
@@ -169,9 +165,6 @@
     grid-column: span 2;
   }
 
-  .database-portal__card:nth-child(7) {
-    grid-column: 2 / span 2;
-  }
 }
 
 @media (max-width: 560px) {
@@ -215,8 +208,7 @@
     margin-top: 28px;
   }
 
-  .database-portal__card,
-  .database-portal__card:nth-child(7) {
+  .database-portal__card {
     grid-column: span 2;
     block-size: 74px;
   }
