@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dataJson from "./sales-data.json";
 import coreChartsJson from "./core-chart-data.json";
 import "./sales.css";
 import "./raw.css";
 import "./sheets.css";
 import "./core-charts.css";
-import "./selects.css";
 import "../research-template.css";
 
 type Scope = "wholesale" | "retail";
@@ -20,7 +19,6 @@ type SourceTable = { title: string; periods: string[]; rows: TableRow[] };
 type SalesData = { updated: string; note: string; industry: Record<Scope, { periods: string[]; series: IndustrySeries }>; models: Record<Scope, ModelData>; tables: Record<Scope, SourceTable[]> };
 type CoreSeries = { name: string; mode: "bar" | "line"; percent: boolean; values: (number | null)[] };
 type CoreChart = { id: string; title: string; module: SheetKey; source: string; unit: string; category: string; categories: string[]; series: CoreSeries[] };
-type SelectOption = { value: string | number; label: string };
 
 const data = dataJson as SalesData;
 const coreCharts = coreChartsJson as CoreChart[];
@@ -31,73 +29,6 @@ const pct = (value: number) => `${value >= 0 ? "+" : ""}${(value * 100).toFixed(
 const volume = (value: number) => (value / 10000).toLocaleString("zh-CN", { maximumFractionDigits: 1 });
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 const modelRecordKey = (record: ModelRecord) => `${record.fuel}|${record.subtype}|${record.model}`;
-
-function SelectMenu({ label, ariaLabel, value, options, onChange, className = "" }: { label?: string; ariaLabel: string; value: string | number; options: SelectOption[]; onChange: (value: string | number) => void; className?: string }) {
-  const [open, setOpen] = useState(false);
-  const selectedIndex = Math.max(options.findIndex(option => String(option.value) === String(value)), 0);
-  const [activeIndex, setActiveIndex] = useState(selectedIndex);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const listboxId = useId();
-  const selectedOption = options[selectedIndex];
-
-  useEffect(() => {
-    if (!open) return;
-    const dismiss = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", dismiss);
-    return () => document.removeEventListener("pointerdown", dismiss);
-  }, [open, selectedIndex]);
-
-  useEffect(() => {
-    if (open) document.getElementById(`${listboxId}-option-${activeIndex}`)?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex, listboxId, open]);
-
-  const commit = (index: number) => {
-    const option = options[index];
-    if (!option) return;
-    onChange(option.value);
-    setOpen(false);
-  };
-
-  const move = (step: number) => {
-    if (!options.length) return;
-    setActiveIndex(index => (index + step + options.length) % options.length);
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (!open) {
-        setActiveIndex(selectedIndex);
-        setOpen(true);
-      } else move(event.key === "ArrowDown" ? 1 : -1);
-    } else if (event.key === "Home" && open) {
-      event.preventDefault();
-      setActiveIndex(0);
-    } else if (event.key === "End" && open) {
-      event.preventDefault();
-      setActiveIndex(Math.max(options.length - 1, 0));
-    } else if ((event.key === "Enter" || event.key === " ") && open) {
-      event.preventDefault();
-      commit(activeIndex);
-    } else if (event.key === "Escape" && open) {
-      event.preventDefault();
-      setOpen(false);
-    } else if (event.key === "Tab") setOpen(false);
-  };
-
-  return <div ref={rootRef} className={`sales-select ${className} ${open ? "is-open" : ""}`.trim()}>
-    {label && <span className="sales-select-label">{label}</span>}
-    <button type="button" className="sales-select-trigger" role="combobox" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} aria-controls={listboxId} aria-activedescendant={open && options[activeIndex] ? `${listboxId}-option-${activeIndex}` : undefined} onClick={() => { setActiveIndex(selectedIndex); setOpen(!open); }} onKeyDown={handleKeyDown}>
-      <span>{selectedOption?.label || "请选择"}</span><i aria-hidden="true" />
-    </button>
-    {open && <div id={listboxId} className="sales-select-menu" role="listbox" aria-label={ariaLabel}>{options.map((option, index) => {
-      const selected = String(option.value) === String(value);
-      return <button id={`${listboxId}-option-${index}`} type="button" role="option" aria-selected={selected} tabIndex={-1} key={`${option.value}-${option.label}`} className={`${selected ? "selected" : ""} ${activeIndex === index ? "active" : ""}`.trim()} onPointerEnter={() => setActiveIndex(index)} onClick={() => commit(index)}>{option.label}</button>;
-    })}</div>}
-  </div>;
-}
 
 function linePoints(values: number[], width: number, height: number, max: number, min = 0) {
   const span = Math.max(max - min, 1);
@@ -178,20 +109,7 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
   const volumeY = (value: number) => top + (volumeMax - value) / volumeMax * plotHeight;
   const percentY = (value: number) => top + (percentMax - value) / percentSpan * plotHeight;
   return <article className="core-chart-card">
-    <header>
-      <div><span>{chart.category}</span><h3>{chart.title}</h3></div>
-      <div className="core-chart-controls">
-        <b>{chart.source}</b>
-        {cumulative ? <>
-          <SelectMenu label="累计至" ariaLabel={`${chart.title}累计区间`} value={cumulativeMonth} options={availableCumulativeMonths.map(month => ({ value: month, label: `1—${Number(month)}月` }))} onChange={value => { const nextMonth = String(value); const nextCount = chart.categories.filter((period, index) => period.slice(5) === nextMonth && chart.series.some(series => !series.percent && series.values[index] !== null)).length; setCumulativeMonth(nextMonth); setStartYearIndex(0); setEndYearIndex(Math.max(nextCount - 1, 0)); }} />
-          <SelectMenu label="起始年度" ariaLabel={`${chart.title}起始年度`} value={startYearIndex} options={cumulativeIndexes.map((index, optionIndex) => ({ value: optionIndex, label: chart.categories[index].slice(0, 4) }))} onChange={value => { const next = Number(value); setStartYearIndex(next); if (next > endYearIndex) setEndYearIndex(next); }} />
-          <SelectMenu label="结束年度" ariaLabel={`${chart.title}结束年度`} value={endYearIndex} options={cumulativeIndexes.map((index, optionIndex) => ({ value: optionIndex, label: chart.categories[index].slice(0, 4) }))} onChange={value => { const next = Number(value); setEndYearIndex(next); if (next < startYearIndex) setStartYearIndex(next); }} />
-        </> : <>
-          <SelectMenu label="起始" ariaLabel={`${chart.title}起始时间`} value={startIndex} options={chart.categories.map((period, index) => ({ value: index, label: period }))} onChange={value => { const next = Number(value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }} />
-          <SelectMenu label="结束" ariaLabel={`${chart.title}结束时间`} value={endIndex} options={chart.categories.map((period, index) => ({ value: index, label: period }))} onChange={value => { const next = Number(value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }} />
-        </>}
-      </div>
-    </header>
+    <header><div><span>{chart.category}</span><h3>{chart.title}</h3></div><div className="core-chart-controls"><b>{chart.source}</b>{cumulative ? <><label>累计至<select aria-label={`${chart.title}累计区间`} value={cumulativeMonth} onChange={event => { const nextMonth = event.target.value; const nextCount = chart.categories.filter((period, index) => period.slice(5) === nextMonth && chart.series.some(series => !series.percent && series.values[index] !== null)).length; setCumulativeMonth(nextMonth); setStartYearIndex(0); setEndYearIndex(Math.max(nextCount - 1, 0)); }}>{availableCumulativeMonths.map(month => <option key={`cumulative-${month}`} value={month}>1—{Number(month)}月</option>)}</select></label><label>起始年度<select aria-label={`${chart.title}起始年度`} value={startYearIndex} onChange={event => { const next = Number(event.target.value); setStartYearIndex(next); if (next > endYearIndex) setEndYearIndex(next); }}>{cumulativeIndexes.map((index, optionIndex) => <option key={`year-start-${chart.categories[index]}`} value={optionIndex}>{chart.categories[index].slice(0, 4)}</option>)}</select></label><label>结束年度<select aria-label={`${chart.title}结束年度`} value={endYearIndex} onChange={event => { const next = Number(event.target.value); setEndYearIndex(next); if (next < startYearIndex) setStartYearIndex(next); }}>{cumulativeIndexes.map((index, optionIndex) => <option key={`year-end-${chart.categories[index]}`} value={optionIndex}>{chart.categories[index].slice(0, 4)}</option>)}</select></label></> : <><label>起始<select aria-label={`${chart.title}起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{chart.categories.map((period, index) => <option key={`start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${chart.title}结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{chart.categories.map((period, index) => <option key={`end-${period}`} value={index}>{period}</option>)}</select></label></>}</div></header>
     <div className="core-chart-legend">{shownSeries.map((series, index) => <span key={`${series.name}-${index}`}><i className={series.mode} style={{ background: palette[index % palette.length] }} />{series.name}</span>)}</div>
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${chart.title}图表`}>
       {[0, 1, 2, 3, 4].map(tick => {
@@ -272,23 +190,13 @@ function aggregateCompanies(modelData: ModelData) {
 function CompanyPicker({ companies, selected, onChange }: { companies: string[]; selected: string[]; onChange: (value: string[]) => void }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const rootRef = useRef<HTMLDivElement>(null);
   const visible = companies.filter(name => name.toLowerCase().includes(query.toLowerCase()));
   const toggle = (name: string) => selected.includes(name) ? onChange(selected.filter(item => item !== name)) : selected.length < 6 && onChange([...selected, name]);
-  useEffect(() => {
-    if (!open) return;
-    const dismiss = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", dismiss);
-    return () => document.removeEventListener("pointerdown", dismiss);
-  }, [open]);
-  return <div ref={rootRef} className={`company-picker ${open ? "is-open" : ""}`}><button type="button" className="picker-trigger" aria-label="选择企业" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}><span>选择企业</span><strong>{selected.length} / 6</strong></button>{open && <div className="picker-popover" role="listbox" aria-label="选择企业" aria-multiselectable="true"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业" aria-label="搜索企业" autoFocus /><div>{visible.map(name => { const active = selected.includes(name); return <label key={name} role="option" aria-selected={active} className={active ? "selected" : ""}><input type="checkbox" checked={active} disabled={!active && selected.length >= 6} onChange={() => toggle(name)} /><span>{name}</span></label>; })}</div></div>}</div>;
+  return <div className="company-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选择企业</span><strong>{selected.length} / 6</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业" autoFocus /><div>{visible.map(name => <label key={name}><input type="checkbox" checked={selected.includes(name)} disabled={!selected.includes(name) && selected.length >= 6} onChange={() => toggle(name)} /><span>{name}</span></label>)}</div></div>}</div>;
 }
 
 function ModelPicker({ options, selected, onChange }: { options: { key: string; label: string; detail: string }[]; selected: string[]; onChange: (value: string[]) => void }) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
   const maxSelected = 8;
   const toggle = (key: string) => {
     if (selected.includes(key)) {
@@ -297,15 +205,7 @@ function ModelPicker({ options, selected, onChange }: { options: { key: string; 
   };
   const selectedOption = options.find(option => option.key === selected[0]);
   const triggerLabel = selected.length === 1 ? selectedOption?.label || "选择车型" : `已选 ${selected.length} 款车型`;
-  useEffect(() => {
-    if (!open) return;
-    const dismiss = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", dismiss);
-    return () => document.removeEventListener("pointerdown", dismiss);
-  }, [open]);
-  return <div ref={rootRef} className={`company-picker model-picker ${open ? "is-open" : ""}`}><button type="button" className="picker-trigger model-picker-trigger" aria-label="选择车型" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}><span>{triggerLabel}</span></button>{open && <div className="model-select-menu" role="listbox" aria-label="选择车型" aria-multiselectable="true">{options.map(option => { const active = selected.includes(option.key); return <button type="button" role="option" aria-selected={active} title={option.detail} key={option.key} className={active ? "selected" : ""} disabled={!active && selected.length >= maxSelected} onClick={() => toggle(option.key)}>{option.label}</button>; })}</div>}</div>;
+  return <div className="company-picker model-picker"><button className="picker-trigger model-picker-trigger" aria-expanded={open} onClick={() => setOpen(!open)}><span>{triggerLabel}</span></button>{open && <div className="model-select-menu" role="listbox" aria-label="选择车型" aria-multiselectable="true">{options.map(option => { const active = selected.includes(option.key); return <button type="button" role="option" aria-selected={active} title={option.detail} key={option.key} className={active ? "selected" : ""} disabled={!active && selected.length >= maxSelected} onClick={() => toggle(option.key)}>{option.label}</button>; })}</div>}</div>;
 }
 
 function CompanyModelHistory({ modelData, scope }: { modelData: ModelData; scope: Scope }) {
@@ -329,7 +229,7 @@ function CompanyModelHistory({ modelData, scope }: { modelData: ModelData; scope
   const modelOptions = rows.map(record => ({ key: modelRecordKey(record), label: record.model, detail: record.fuel === record.subtype ? record.fuel : `${record.fuel} · ${record.subtype}` }));
   const series = rows.filter(record => selectedModels.includes(modelRecordKey(record))).map((record, index) => ({ name: modelCounts.get(record.model)! > 1 ? `${record.model} · ${record.subtype}` : record.model, values: record.values.slice(startIndex, endIndex + 1), color: modelLineColor(index) }));
   return <article className="sales-panel company-model-history">
-    <header><div><span>单车企车型历史</span><h2>{company} · {scope === "wholesale" ? "批发" : "零售"}车型销量趋势</h2></div><div className="company-model-controls"><SelectMenu label="车企" ariaLabel={`选择${scope === "wholesale" ? "批发" : "零售"}车企`} value={company} options={companies.map(name => ({ value: name, label: name }))} onChange={value => setCompany(String(value))} className="sales-select--company" /><ModelPicker options={modelOptions} selected={selectedModels} onChange={setSelectedModels} /><SelectMenu label="起始" ariaLabel={`${company}车型趋势起始时间`} value={startIndex} options={modelData.periods.map((period, index) => ({ value: index, label: period }))} onChange={value => { const next = Number(value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }} /><SelectMenu label="结束" ariaLabel={`${company}车型趋势结束时间`} value={endIndex} options={modelData.periods.map((period, index) => ({ value: index, label: period }))} onChange={value => { const next = Number(value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }} /></div></header>
+    <header><div><span>单车企车型历史</span><h2>{company} · {scope === "wholesale" ? "批发" : "零售"}车型销量趋势</h2></div><div className="company-model-controls"><label>车企<select aria-label={`选择${scope === "wholesale" ? "批发" : "零售"}车企`} value={company} onChange={event => setCompany(event.target.value)}>{companies.map(name => <option key={name} value={name}>{name}</option>)}</select></label><ModelPicker options={modelOptions} selected={selectedModels} onChange={setSelectedModels} /><label>起始<select aria-label={`${company}车型趋势起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{modelData.periods.map((period, index) => <option key={`${scope}-model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${company}车型趋势结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{modelData.periods.map((period, index) => <option key={`${scope}-model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header>
     <div className="company-model-summary"><span>已选 <b>{series.length}</b> / {rows.length} 款车型</span><span><b>{categoryCount}</b> 个动力类别</span><span>{periods[0]} 至 {periods[periods.length - 1]}</span></div>
     <div className="company-model-line-chart"><LineChart periods={periods} series={series} vehicles modelStyle /></div>
   </article>;
@@ -355,8 +255,8 @@ function ModelCoreSpotlight({ scope }: { scope: Scope }) {
   return <section className="core-model-section">
     <div className="core-model-toolbar"><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div>
     <div className="core-model-grid">
-      <article className="sales-panel"><header><div><span>时间点横向对比</span><h2>{modelData.periods[rankingIndex]} 车企销量排名</h2></div><SelectMenu label="时间" ariaLabel="选择车企销量排名时间" value={rankingIndex} options={modelData.periods.map((period, index) => ({ value: index, label: period }))} onChange={value => setRankingIndex(Number(value))} className="core-single-period" /></header><SnapshotBars percent={false} rows={latestRanking.slice(0, 15).map(item => ({ name: item.name, value: item.values[rankingIndex] }))} /></article>
-      <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><SelectMenu label="起始" ariaLabel="车企销量趋势起始时间" value={trendStart} options={modelData.periods.map((period, index) => ({ value: index, label: period }))} onChange={value => { const next = Number(value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }} /><SelectMenu label="结束" ariaLabel="车企销量趋势结束时间" value={trendEnd} options={modelData.periods.map((period, index) => ({ value: index, label: period }))} onChange={value => { const next = Number(value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }} /></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} modelStyle /></article>
+      <article className="sales-panel"><header><div><span>时间点横向对比</span><h2>{modelData.periods[rankingIndex]} 车企销量排名</h2></div><label className="core-single-period">时间<select value={rankingIndex} onChange={event => setRankingIndex(Number(event.target.value))}>{modelData.periods.map((period, index) => <option key={period} value={index}>{period}</option>)}</select></label></header><SnapshotBars percent={false} rows={latestRanking.slice(0, 15).map(item => ({ name: item.name, value: item.values[rankingIndex] }))} /></article>
+      <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><label>起始<select value={trendStart} onChange={event => { const next = Number(event.target.value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }}>{modelData.periods.map((period, index) => <option key={`model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select value={trendEnd} onChange={event => { const next = Number(event.target.value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }}>{modelData.periods.map((period, index) => <option key={`model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} modelStyle /></article>
     </div>
     <CompanyModelHistory modelData={modelData} scope={scope} />
   </section>;
@@ -382,7 +282,7 @@ function ModelsView({ scope }: { scope: Scope }) {
     <section className="sales-dashboard-grid model-grid">
       <article className="sales-panel company-trend-panel"><header><div><span>企业纵向</span><h2>月度销量趋势</h2></div><small>单位：辆</small></header><LineChart periods={modelData.periods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values, color: palette[index % palette.length] }))} /></article>
       <article className="sales-panel ranking-panel"><header><div><span>企业横向</span><h2>{data.updated} 企业排名</h2></div><small>前 12 家</small></header><div className="company-ranking">{latestRanking.map((item, index) => <button key={item.name} className={detailCompany === item.name ? "active" : ""} onClick={() => setDetailCompany(item.name)}><em>{String(index + 1).padStart(2, "0")}</em><span>{item.name}</span><i><b style={{ width: `${item.values[latestIndex] / Math.max(latestRanking[0]?.values[latestIndex] || 1, 1) * 100}%` }} /></i><strong>{item.values[latestIndex].toLocaleString("zh-CN")}</strong></button>)}</div></article>
-      <article className="sales-panel model-panel"><header><div><span>车型下钻</span><h2>{detailCompany || "请选择企业"} · 车型表现</h2></div><SelectMenu ariaLabel="选择车型下钻企业" value={detailCompany} options={companies.map(item => ({ value: item.name, label: item.name }))} onChange={value => setDetailCompany(String(value))} className="sales-select--company" /></header><div className="model-table"><div className="model-table-head"><span>车型</span><span>动力</span><span>{data.updated}</span><span>2026累计</span></div>{topModels.map(item => <div key={`${item.model}-${item.fuel}`}><strong>{item.model}</strong><span>{item.subtype}</span><em>{item.latest.toLocaleString("zh-CN")}</em><b>{item.total.toLocaleString("zh-CN")}</b></div>)}</div></article>
+      <article className="sales-panel model-panel"><header><div><span>车型下钻</span><h2>{detailCompany || "请选择企业"} · 车型表现</h2></div><select value={detailCompany} onChange={event => setDetailCompany(event.target.value)}>{companies.map(item => <option key={item.name}>{item.name}</option>)}</select></header><div className="model-table"><div className="model-table-head"><span>车型</span><span>动力</span><span>{data.updated}</span><span>2026累计</span></div>{topModels.map(item => <div key={`${item.model}-${item.fuel}`}><strong>{item.model}</strong><span>{item.subtype}</span><em>{item.latest.toLocaleString("zh-CN")}</em><b>{item.total.toLocaleString("zh-CN")}</b></div>)}</div></article>
       <article className="sales-panel fuel-panel"><header><div><span>动力结构</span><h2>{detailCompany || "企业"} · 2026累计</h2></div></header><div className="fuel-bars">{fuelRows.map(([name, value], index) => <div key={name}><span>{name}</span><strong>{value.toLocaleString("zh-CN")} 辆</strong><i><b style={{ width: `${value / fuelMax * 100}%`, background: palette[index % palette.length] }} /></i></div>)}</div></article>
       <article className="sales-panel matrix-panel"><header><div><span>月度矩阵</span><h2>头部企业最近六个月销量</h2></div><small>横向企业 × 纵向时间</small></header><div className="matrix-wrap"><table><thead><tr><th>企业</th>{modelData.periods.slice(-6).map(period => <th key={period}>{formatPeriod(period)}</th>)}</tr></thead><tbody>{latestRanking.slice(0, 10).map(company => <tr key={company.name}><td>{company.name}</td>{company.values.slice(-6).map((value, index) => <td key={index}>{value.toLocaleString("zh-CN")}</td>)}</tr>)}</tbody></table></div></article>
     </section>
@@ -436,7 +336,7 @@ function DualAnalysis({ title, periods, rows, metricLabel, percent = false, rese
   const start = windowSize ? Math.max(0, periods.length - windowSize) : 0;
   return <section className="dual-analysis">
     <aside className="analysis-controls"><header><span>分析对象</span><strong>{title}</strong><small>趋势图最多同时选择 8 项</small></header><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业、品牌或数据项" /><div className="analysis-options">{filtered.map(row => <label key={row.id}><input type="checkbox" checked={selectedIds.includes(row.id)} disabled={!selectedIds.includes(row.id) && selectedIds.length >= 8} onChange={() => toggle(row.id)} /><span>{row.name}</span></label>)}</div></aside>
-    <article className="sales-panel snapshot-panel"><header><div><span>时间点横向对比</span><h2>{periods[periodIndex]} · 已选 {selectedRows.length} 项</h2></div><SelectMenu ariaLabel={`${title}横向对比月份`} value={periodIndex} options={periods.map((period, index) => ({ value: index, label: period }))} onChange={value => setPeriodIndex(Number(value))} /></header><SnapshotBars percent={percent} rows={selectedRows.map(row => ({ name: row.name, value: row.values[periodIndex] || 0 }))} /><p className="analysis-note">左侧选择的对象同时作用于横向对比图和趋势图；当前指标：{metricLabel}。</p></article>
+    <article className="sales-panel snapshot-panel"><header><div><span>时间点横向对比</span><h2>{periods[periodIndex]} · 已选 {selectedRows.length} 项</h2></div><select value={periodIndex} onChange={event => setPeriodIndex(Number(event.target.value))}>{periods.map((period, index) => <option key={period} value={index}>{period}</option>)}</select></header><SnapshotBars percent={percent} rows={selectedRows.map(row => ({ name: row.name, value: row.values[periodIndex] || 0 }))} /><p className="analysis-note">左侧选择的对象同时作用于横向对比图和趋势图；当前指标：{metricLabel}。</p></article>
     <article className="sales-panel multi-trend-panel"><header><div><span>多对象时间趋势</span><h2>{selectedRows.length} 项同图 · {metricLabel}</h2></div><div className="range-switch"><button className={windowSize === 12 ? "active" : ""} onClick={() => setWindowSize(12)}>近12月</button><button className={windowSize === 24 ? "active" : ""} onClick={() => setWindowSize(24)}>近24月</button><button className={windowSize === 0 ? "active" : ""} onClick={() => setWindowSize(0)}>全部</button></div></header><LineChart periods={periods.slice(start)} percent={percent} series={selectedRows.map((row, index) => ({ name: row.name, values: row.values.slice(start), color: palette[index % palette.length] }))} /></article>
   </section>;
 }
@@ -446,7 +346,7 @@ function SectionAnalysis({ section }: { section: SourceTable }) {
   const [metric, setMetric] = useState<MetricKind>(metrics[0] || "销量/规模");
   useEffect(() => { setMetric(metrics[0] || "销量/规模"); }, [section.title]);
   const rows = section.rows.filter(row => rowMetric(row.label) === metric).map(row => ({ id: String(row.row), name: analysisName(row.label, section.title), values: row.values }));
-  return <><div className="metric-toolbar"><div><span>当前分表</span><strong>{section.title}</strong><small>{rows.length} 个可比较对象</small></div><SelectMenu label="分析指标" ariaLabel={`${section.title}分析指标`} value={metric} options={metrics.map(item => ({ value: item, label: item }))} onChange={value => setMetric(String(value) as MetricKind)} /><p>每个分表均提供同一月份的横向对比，以及多个对象的历史趋势同图。</p></div><DualAnalysis title={section.title} periods={section.periods} rows={rows} metricLabel={metric} percent={metric !== "销量/规模"} resetKey={`${section.title}-${metric}`} /></>;
+  return <><div className="metric-toolbar"><div><span>当前分表</span><strong>{section.title}</strong><small>{rows.length} 个可比较对象</small></div><label>分析指标<select value={metric} onChange={event => setMetric(event.target.value as MetricKind)}>{metrics.map(item => <option key={item}>{item}</option>)}</select></label><p>每个分表均提供同一月份的横向对比，以及多个对象的历史趋势同图。</p></div><DualAnalysis title={section.title} periods={section.periods} rows={rows} metricLabel={metric} percent={metric !== "销量/规模"} resetKey={`${section.title}-${metric}`} /></>;
 }
 
 function aggregateModelRows(modelData: ModelData, dimension: "company" | "model" | "fuel" | "subtype") {
@@ -465,7 +365,7 @@ function ModelSourceAnalysis({ modelData, scope }: { modelData: ModelData; scope
   useEffect(() => { setDimension("company"); }, [scope]);
   const labels = { company: "企业", model: "车型", fuel: "燃料类型", subtype: "新能源细分" };
   const rows = aggregateModelRows(modelData, dimension);
-  return <><div className="metric-toolbar"><div><span>当前分表</span><strong>分车型【{scope === "wholesale" ? "批发" : "零售"}】</strong><small>{modelData.records.length} 条车型明细</small></div><SelectMenu label="分析层级" ariaLabel="选择车型分析层级" value={dimension} options={Object.entries(labels).map(([key, label]) => ({ value: key, label }))} onChange={value => setDimension(String(value) as typeof dimension)} /><p>可按企业、车型、动力类型或新能源细分汇总，并生成横向和纵向两类图表。</p></div><DualAnalysis title={labels[dimension]} periods={modelData.periods} rows={rows} metricLabel="销量" resetKey={`${scope}-${dimension}`} /></>;
+  return <><div className="metric-toolbar"><div><span>当前分表</span><strong>分车型【{scope === "wholesale" ? "批发" : "零售"}】</strong><small>{modelData.records.length} 条车型明细</small></div><label>分析层级<select value={dimension} onChange={event => setDimension(event.target.value as typeof dimension)}>{Object.entries(labels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><p>可按企业、车型、动力类型或新能源细分汇总，并生成横向和纵向两类图表。</p></div><DualAnalysis title={labels[dimension]} periods={modelData.periods} rows={rows} metricLabel="销量" resetKey={`${scope}-${dimension}`} /></>;
 }
 
 function RawDataView({ scope, source }: { scope: Scope; source: "industry" | "models" }) {
