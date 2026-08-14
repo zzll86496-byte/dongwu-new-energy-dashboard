@@ -7,7 +7,9 @@
 .core-chart-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
 .core-chart-card{grid-column:span 3;min-width:0;border:1px solid #d8e0e5;background:#fff;box-shadow:0 4px 16px rgba(23,63,98,.045)}
 .core-chart-grid--three-tail .core-chart-card:nth-last-child(-n+3){grid-column:span 2}
-.core-chart-grid--single .core-chart-card{grid-column:1/-1}
+.core-chart-grid--single{display:flex;justify-content:center}
+.core-chart-grid--single .core-chart-card{grid-column:auto;width:min(100%,1760px)}
+.core-chart-grid--single .core-chart-card svg{height:clamp(320px,24vw,460px)}
 .core-chart-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:15px 17px 7px}
 .core-chart-card>header span{color:#a4873e;font-size:8px;font-weight:800;letter-spacing:1px}
 .core-chart-card>header h3{margin:3px 0 0;color:#173f62;font-size:15px}
@@ -82,5 +84,6 @@
   .company-model-summary{flex-wrap:wrap}
   .company-model-line-chart .sales-line-chart svg{height:320px}
   .core-chart-card svg{height:220px}
+  .core-chart-grid--single .core-chart-card svg{height:260px}
   .core-chart-card>footer{padding:9px 12px}
 }

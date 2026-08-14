@@ -97,6 +97,8 @@ test("keeps the approved planning template across database interfaces", async ()
   assert.match(sales, /className="core-model-toolbar"/);
   assert.match(sales, /core-chart-grid--three-tail/);
   assert.match(salesCoreCss, /nth-last-child\(-n\+3\)\{grid-column:span 2\}/);
+  assert.match(salesCoreCss, /core-chart-grid--single \.core-chart-card\{grid-column:auto;width:min\(100%,1760px\)\}/);
+  assert.match(salesCoreCss, /core-chart-grid--single \.core-chart-card svg\{height:clamp\(320px,24vw,460px\)\}/);
   for (const source of [storage, lithium, batteryExport, supply, sales]) {
     assert.match(source, /soochow-securities\.png/);
     assert.match(source, /alt="东吴证券 Soochow Securities"/);
