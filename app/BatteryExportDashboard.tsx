@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import rawData from "./data/battery-export.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "./excel-export";
+import { ResearchPageHeader } from "./ResearchPageHeader";
 import "./export.css";
 import "./research-template.css";
 
@@ -97,7 +98,11 @@ export function BatteryExportDashboard() {
       <div className="export-source">数据来源：{data.meta.source}<br/>更新至：{data.meta.updated}</div>
     </aside>
     <section className="export-main">
-      <header className="export-topbar"><div><span>DONGWU NEW ENERGY · EXPORT DATABASE</span><h1>{data.meta.title}</h1><p>电池 · {longPeriod(period)} · 金额口径</p></div></header>
+      <ResearchPageHeader
+        title={data.meta.title}
+        context={`${labels[dimension]} · ${longPeriod(period)} · 金额口径`}
+        updated={data.meta.updated}
+      />
       <section className="export-kpis">
         <article><span>当月出口额</span><strong>{fmt(total.amount,2)}<small>亿美元</small></strong><p>环比 <b className={(total.mom??0)<0?"negative":"positive"}>{pct(total.mom)}</b></p></article>
         <article><span>当月同比</span><strong>{pct(total.yoy)}</strong><p>出口金额同比变化</p></article>

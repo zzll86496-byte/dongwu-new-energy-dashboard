@@ -1,0 +1,108 @@
+/* 六个数据库共用的“东吴研究题签”标题系统。业务筛选仍保留在各页侧栏。 */
+.dw-research-header{
+  --dw-header-navy:#082b63;
+  --dw-header-blue:#078aca;
+  --dw-header-ink:#152738;
+  --dw-header-muted:#687985;
+  --dw-header-line:#d4dde3;
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  box-sizing:border-box;
+  width:100%;
+  grid-column:1 / -1;
+  min-height:88px;
+  margin:0 auto 12px;
+  padding:12px 12px 14px 28px;
+  border-bottom:1px solid var(--dw-header-line);
+  color:var(--dw-header-ink);
+  background:transparent;
+}
+.dw-research-header *{box-sizing:border-box}
+.dw-research-header__rule{
+  position:absolute;
+  top:12px;
+  bottom:14px;
+  left:0;
+  display:grid;
+  grid-template-rows:3fr 2fr;
+  width:5px;
+  gap:1px;
+}
+.dw-research-header__rule i{display:block;background:var(--dw-header-navy)}
+.dw-research-header__rule i+ i{background:var(--dw-header-blue)}
+.dw-research-header__body{min-width:0;flex:1}
+.dw-research-header p{margin:0}
+.dw-research-header__kicker{
+  color:var(--dw-header-navy);
+  font-family:"IBM Plex Sans","Arial Narrow",Arial,sans-serif;
+  font-size:9px;
+  font-weight:600;
+  line-height:1.2;
+  letter-spacing:.14em;
+  white-space:nowrap;
+}
+.dw-research-header .dw-research-header__title{
+  margin:6px 0 4px;
+  color:var(--dw-header-navy);
+  font-family:"Noto Serif SC","Source Han Serif SC","Songti SC",SimSun,serif;
+  font-size:clamp(24px,1.8vw,30px);
+  font-weight:600;
+  line-height:1.15;
+  letter-spacing:-.025em;
+  text-wrap:balance;
+}
+.dw-research-header__context{
+  overflow:hidden;
+  color:var(--dw-header-muted);
+  font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif;
+  font-size:11px;
+  line-height:1.4;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.dw-research-header__aside{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex:0 0 auto;
+  gap:16px;
+  min-height:38px;
+}
+.dw-research-header__controls{display:flex;align-items:center}
+.dw-research-header__updated{
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+  padding-left:16px;
+  border-left:1px solid #9eabb5;
+  color:var(--dw-header-muted);
+  font-family:"DIN Alternate","Arial Narrow",Arial,"Microsoft YaHei",sans-serif;
+  font-size:11px;
+  white-space:nowrap;
+}
+.dw-research-header__updated strong{
+  color:#455967;
+  font-size:14px;
+  font-weight:500;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+}
+@media(max-width:760px){
+  .dw-research-header{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:10px;
+    min-height:0;
+    padding:10px 4px 12px 20px;
+  }
+  .dw-research-header__rule{top:10px;bottom:12px;width:4px}
+  .dw-research-header__kicker{font-size:8px;letter-spacing:.1em}
+  .dw-research-header .dw-research-header__title{margin-top:5px;font-size:23px}
+  .dw-research-header__context{max-width:calc(100vw - 56px);font-size:10px}
+  .dw-research-header__aside{width:100%;justify-content:space-between;gap:10px;min-height:32px}
+  .dw-research-header__updated{margin-left:auto;padding-left:12px;font-size:10px}
+  .dw-research-header__updated strong{font-size:12px}
+}

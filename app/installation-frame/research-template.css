@@ -149,6 +149,17 @@
   background: var(--template-canvas);
 }
 
+/* Keep the shared database title ahead of every legacy installation module. */
+.installation-scope .workspace > main {
+  display: flex;
+  flex-direction: column;
+}
+
+.installation-scope .workspace > main > .dw-research-header {
+  order: -1;
+  flex: 0 0 auto;
+}
+
 .installation-scope .panel,
 .installation-scope .dashboard-panel,
 .installation-scope .summary-kpis article,

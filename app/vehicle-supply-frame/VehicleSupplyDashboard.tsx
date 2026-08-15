@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import history from "./history.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "../excel-export";
+import { ResearchPageHeader } from "../ResearchPageHeader";
 
 type PageKey = "overview" | "relations" | "company";
 type TrendRow = { period: string; totalGwh: number; units: number; shares: Record<string, number> };
@@ -502,7 +503,11 @@ export default function Dashboard() {
         <div className="supply-source">数据范围<br/><b>{historyData.firstPeriod}—{historyData.lastPeriod}</b></div>
       </aside>
       <section className="supply-main">
-        <header className="topbar"><div className="brand"><span>DONGWU NEW ENERGY · SUPPLY DASHBOARD</span><h1>动力电池车企配套数据库</h1><p>国内装机 · {period} · {category} · GWh</p></div></header>
+        <ResearchPageHeader
+          title="动力电池车企配套数据库"
+          context={`${current.label} · ${period} · ${category} · GWh`}
+          updated={historyData.lastPeriod}
+        />
         <div className="page-title"><div><span>{String(NAV.findIndex(x=>x.key===page)+1).padStart(2,"0")}</span><h2>{current.label}</h2><p>{current.note} · {periodText(period)} · {category}</p></div><div className="data-badge"><i/>历史数据已连接 <b>{historyData.sourceRows.toLocaleString()}</b> 条</div></div>
         <div className="content">{page==="overview"?<OverviewPage snapshot={snapshot} trend={trend} period={period}/>:page==="relations"?<RelationsPage snapshot={snapshot} period={period}/>:<CompanyPage snapshot={snapshot} period={period} companies={view.companies}/>}</div>
         <footer>东吴电新 · 动力电池配套关系数据库可视化初稿 <span>数据范围 {historyData.firstPeriod}—{historyData.lastPeriod}</span></footer>

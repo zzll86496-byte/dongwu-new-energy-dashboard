@@ -234,6 +234,17 @@
   align-self: start;
 }
 
+/* Unified header occupies row one; all database metrics begin below it. */
+.database-template > .workspace > .dw-research-header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.database-template .kpi-row {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
 .database-template .kpi,
 .database-template .panel {
   border-color: var(--research-line);
@@ -270,7 +281,7 @@
 
 .database-template .content-grid {
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 3;
   width: 100%;
   max-width: none;
   min-width: 0;
@@ -288,6 +299,7 @@
 
 .database-template > .workspace > footer {
   grid-column: 1 / -1;
+  grid-row: 4;
   width: 100%;
   max-width: none;
 }

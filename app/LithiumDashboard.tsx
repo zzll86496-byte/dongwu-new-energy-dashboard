@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState, type CSSProperties } from "react";
 import rawData from "./data/lithium-production.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "./excel-export";
+import { ResearchPageHeader } from "./ResearchPageHeader";
 import "./planning.css";
 
 type Value = { period: string; raw: string; value: number | null; mom: number | null };
@@ -184,7 +185,12 @@ export function LithiumDashboard() {
       </aside>
 
       <section className="planning-main">
-        <header className="planning-topbar"><div><span className="topbar-kicker">DONGWU NEW ENERGY · PLANNING DASHBOARD</span><h1>{T.title}</h1><p>{category.name} · {period} · {category.unit}</p></div><div className="topbar-mode"><span>{T.value} / {T.mom}</span><div className="mode-switch"><button className={mode === "value" ? "active" : ""} onClick={() => setMode("value")}>{T.value}</button><button className={mode === "mom" ? "active" : ""} onClick={() => setMode("mom")}>{T.mom}</button></div></div></header>
+        <ResearchPageHeader
+          title={T.title}
+          context={`${category.name} · ${period} · ${category.unit}`}
+          updated={data.meta.latestPeriod}
+          controls={<div className="mode-switch" role="group" aria-label={`${T.value}或${T.mom}`}><button className={mode === "value" ? "active" : ""} onClick={() => setMode("value")}>{T.value}</button><button className={mode === "mom" ? "active" : ""} onClick={() => setMode("mom")}>{T.mom}</button></div>}
+        />
 
         <section className="planning-kpis">{headlineMetrics.map((item) => <button className={`metric-card ${item.key === categoryKey ? "active" : ""}`} key={item.key} onClick={() => { setCategoryKey(item.key); setSelectedCompanyName(""); }}><span>{item.name}</span><div className="metric-value">{fmt(item.latest.value)}<small>{item.unit}</small></div><p>{T.mom} <b className={item.latest.mom != null && item.latest.mom < 0 ? "negative-text" : "positive-text"}>{signed(item.latest.mom)}</b></p></button>)}</section>
 

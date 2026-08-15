@@ -245,6 +245,19 @@
   .planning-shell .company-card .company-bar small{position:absolute;bottom:-19px;left:50%;display:block;max-width:none;overflow:visible;transform:translateX(-50%);font-size:7px;white-space:nowrap}
 }
 
+/* The shared research title owns the first row; dashboard content starts below it. */
+@media(min-width:761px){
+  .planning-shell .dw-research-header{grid-column:1 / -1;grid-row:1;margin-bottom:0}
+  .planning-shell .planning-kpis{grid-column:1 / 11;grid-row:2}
+  .planning-shell .ratio-card{grid-column:11 / 13;grid-row:2}
+  .planning-shell .trend-card{grid-column:1 / 6;grid-row:3}
+  .planning-shell .line-card{grid-column:6 / 13;grid-row:3}
+  .planning-shell .company-card{grid-column:1 / 5;grid-row:4}
+  .planning-shell .composition-card{grid-column:5 / 8;grid-row:4}
+  .planning-shell .raw-card{grid-column:8 / 13;grid-row:4}
+  .planning-shell .planning-footer{grid-column:1 / -1;grid-row:5}
+}
+
 .planning-shell .trend-card .bar-item i{max-height:calc(100% - 27px)}
 .planning-shell .company-plot{min-width:0;flex:1;display:flex;flex-direction:column}
 .planning-shell .company-plot .company-bars{height:auto;min-height:0;flex:1;padding-bottom:0!important;overflow:hidden!important}

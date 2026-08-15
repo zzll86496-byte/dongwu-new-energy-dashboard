@@ -5,6 +5,7 @@ import installData from "./data/install-summary.json";
 import structureSource from "./data/domestic-structure.json";
 import domesticMakerSource from "./data/domestic-makers.json";
 import globalMarketsSource from "./data/global-markets.json";
+import { ResearchPageHeader } from "../ResearchPageHeader";
 
 type Tab = "domestic" | "chemistry" | "chinaRank" | "global";
 type Series = { name: string; values: number[]; color: string };
@@ -769,7 +770,7 @@ export default function Home() {
       <div className="side-current"><span>CURRENT DATABASE</span><b>动力电池装机</b><small>NO. 5000</small></div>
     </aside>
     <div className="workspace">
-      <main className={`${tab}-main`}><div className="page-head"><div><h1>{current.name}</h1></div></div>{tab === "domestic" && <Domestic />}{tab === "chemistry" && <Chemistry />}{tab === "chinaRank" && <ChinaRank />}{tab === "global" && <Global />}</main>
+      <main className={`${tab}-main`}><ResearchPageHeader title="动力电池装机数据库" context={`${current.name} · ${current.scope}`} updated={domesticMakerData.periods.at(-1) ?? "2026-05"} />{tab === "domestic" && <Domestic />}{tab === "chemistry" && <Chemistry />}{tab === "chinaRank" && <ChinaRank />}{tab === "global" && <Global />}</main>
       <footer><span>DONGWU NEW ENERGY · BATTERY DATABASE</span><span>2026年为1—5月累计，其余年份为全年累计</span></footer>
     </div>
   </div></div>;

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { dashboardData } from "./dashboard-data";
 import { exportChartWorkbook } from "./excel-export";
+import { ResearchPageHeader } from "./ResearchPageHeader";
 import "./research-template.css";
 
 type Point = [string, number | null];
@@ -181,6 +182,14 @@ export default function Page() {
   const latestCapacity = lastNumber(data.capacity.total);
   const latestUtilization = lastNumber(data.utilization.average) * 100;
   const latestShipment = lastNumber(data.shipments.total);
+  const headerDetails: Record<Module, { context: string; updated: string }> = {
+    "总览": { context: "行业核心趋势 · 2026-06 · GWh", updated: "2026-06" },
+    "价格": { context: `储能电芯价格 · ${priceLatest?.[0]?.slice(0, 7) ?? "—"} · 元/Wh`, updated: priceLatest?.[0]?.slice(0, 7) ?? "—" },
+    "产能": { context: `企业产能 · ${data.capacity.months.at(-1) ?? "—"} · GWh/年`, updated: data.capacity.months.at(-1) ?? "—" },
+    "产量": { context: `企业产量 · ${data.production.months.at(-1) ?? "—"} · GWh`, updated: data.production.months.at(-1) ?? "—" },
+    "开工率": { context: `行业开工率 · ${data.utilization.months.at(-1) ?? "—"} · %`, updated: data.utilization.months.at(-1) ?? "—" },
+    "出货量": { context: `企业出货量 · ${data.shipments.months.at(-1) ?? "—"} · GWh`, updated: data.shipments.months.at(-1) ?? "—" },
+  };
 
   const renderDetail = () => {
     if (active === "价格") return <>
@@ -231,7 +240,11 @@ export default function Page() {
       <div className="side-bottom">数据来源<br /><b>鑫椤锂电</b></div>
     </aside>
     <section className="workspace">
-      <header className="topbar"><div><p>DONGWU NEW ENERGY · FULL DATA DATABASE</p><h1>储能电池产业链数据库</h1><span>Sheet 1 价格 · Sheet 2 产能 / 产量 / 开工率 · Sheet 3 出货量</span></div><div className="update-badge"><small>当前模块</small><strong>{active}</strong><span>完整数据视图</span></div></header>
+      <ResearchPageHeader
+        title="储能电池产业链数据库"
+        context={`${active} · ${headerDetails[active].context}`}
+        updated={headerDetails[active].updated}
+      />
       <section className="kpi-row">
         <Kpi active={active === "价格"} onClick={() => setActive("价格")} label="储能电芯均价" value={fmt(priceLatest?.[3] ?? 0, 2)} unit="元/Wh" note={`${data.price.categories.length}个价格品类`} />
         <Kpi active={active === "产量"} onClick={() => setActive("产量")} label="最新全球月产量" value={fmt(latestProduction, 1)} unit="GWh" note={`${data.production.companies.length}家企业`} />
