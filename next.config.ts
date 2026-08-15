@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
     ? {
         output: "export" as const,
         assetPrefix: githubPagesBasePath,
-        trailingSlash: true,
       }
     : {}),
   env: {
