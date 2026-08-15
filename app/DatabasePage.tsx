@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { dashboardData } from "./dashboard-data";
 import { exportChartWorkbook } from "./excel-export";
 import { ResearchPageHeader } from "./ResearchPageHeader";
@@ -23,6 +23,8 @@ type Module = "总览" | "价格" | "产能" | "产量" | "开工率" | "出货�
 type ChartLine = { name: string; points: Point[]; color: string };
 
 const COLORS = ["#173f62", "#a18b4e", "#c17632", "#4e7b65"];
+const COMPANY_COLORS = ["#a18b4e", "#c17632", "#2c7a82", "#795c8d", "#6e7f8f", "#4e7b65"];
+const MAX_COMPANY_LINES = COMPANY_COLORS.length;
 const lastNumber = (points: Point[]) => [...points].reverse().find((point) => point[1] !== null)?.[1] ?? 0;
 const sum = (points: Point[], prefix?: string) => points.reduce((total, point) => total + ((prefix && !point[0].startsWith(prefix)) || point[1] === null ? 0 : point[1]), 0);
 const fmt = (value: number, digits = 1) => value.toLocaleString("zh-CN", { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -31,7 +33,54 @@ const toMom = (points: Point[]): Point[] => points.map((point, index) => {
   return [point[0], point[1] === null || previous === null || previous === 0 ? null : (point[1] / previous - 1) * 100];
 });
 
-function TrendChart({ title, lines, unit, height = 270, entityOptions, entityValue, onEntityChange }: { title: string; lines: ChartLine[]; unit: string; height?: number; entityOptions?: string[]; entityValue?: string; onEntityChange?: (name: string) => void }) {
+function CompanyMultiSelect({ title, options, values, onChange }: { title: string; options: string[]; values: string[]; onChange: (names: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+  const filtered = options.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
+  const atLimit = values.length >= MAX_COMPANY_LINES;
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+
+  const toggle = (name: string) => {
+    if (values.includes(name)) onChange(values.filter((item) => item !== name));
+    else if (!atLimit) onChange([...values, name]);
+  };
+
+  return <div className="company-multi-picker" ref={rootRef}>
+    <span className="company-multi-label">企业</span>
+    <button type="button" className="company-multi-trigger" aria-expanded={open} aria-controls={menuId} onClick={() => setOpen((current) => !current)}>
+      <span>选择企业</span><b>{values.length} / {MAX_COMPANY_LINES}</b><i aria-hidden="true">⌄</i>
+    </button>
+    {open && <div className="company-multi-menu" id={menuId} role="group" aria-label={`${title}选择企业`}>
+      <div className="company-multi-search"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索企业" aria-label="搜索企业" /></div>
+      <div className="company-multi-meta"><span>最多选择 {MAX_COMPANY_LINES} 家</span><button type="button" onClick={() => onChange([])} disabled={values.length === 0}>清空</button></div>
+      <div className="company-multi-options">
+        {filtered.map((name) => {
+          const checked = values.includes(name);
+          return <label key={name} className={checked ? "checked" : ""}><input type="checkbox" checked={checked} disabled={!checked && atLimit} onChange={() => toggle(name)} /><span>{name}</span></label>;
+        })}
+        {filtered.length === 0 && <p>未找到匹配企业</p>}
+      </div>
+    </div>}
+  </div>;
+}
+
+function TrendChart({ title, lines, unit, height = 270, entityOptions, entityValues, onEntityValuesChange }: { title: string; lines: ChartLine[]; unit: string; height?: number; entityOptions?: string[]; entityValues?: string[]; onEntityValuesChange?: (names: string[]) => void }) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
   const allLabels = lines[0]?.points.map((point) => point[0]) ?? [];
@@ -94,7 +143,7 @@ function TrendChart({ title, lines, unit, height = 270, entityOptions, entityVal
     <div className="chart-wrap">
       <div className="database-chart-toolbar">
         <button type="button" className="database-chart-export" disabled={exporting} onClick={exportExcel}>{exporting ? "生成中" : "导出Excel"}</button>
-        {entityOptions && entityValue && onEntityChange && <label className="database-company-control"><span>企业</span><select aria-label={`${title}选择企业`} value={entityValue} onChange={(event) => onEntityChange(event.target.value)}>{entityOptions.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>}
+        {entityOptions && entityValues && onEntityValuesChange && <CompanyMultiSelect title={title} options={entityOptions} values={entityValues} onChange={onEntityValuesChange} />}
         <div className="database-chart-range"><select aria-label={`${title}起始月份`} value={rangeStart} onChange={(event)=>setRangeStart(event.target.value)}>{allLabels.map((label)=><option key={label} value={label}>{label}</option>)}</select><i>—</i><select aria-label={`${title}结束月份`} value={rangeEnd} onChange={(event)=>setRangeEnd(event.target.value)}>{allLabels.map((label)=><option key={label} value={label}>{label}</option>)}</select></div>
       </div>
       <div className="chart-legend">{lines.map((line) => <span key={line.name}><i style={{ background: line.color }} />{line.name}</span>)}</div>
@@ -173,15 +222,23 @@ export default function Page() {
   const [capacityName, setCapacityName] = useState(data.capacity.companies[0].name);
   const [utilizationName, setUtilizationName] = useState(data.utilization.companies[0].name);
   const [shipmentName, setShipmentName] = useState(data.shipments.companies[0].name);
+  const [productionNames, setProductionNames] = useState([data.production.companies[0].name]);
+  const [capacityNames, setCapacityNames] = useState([data.capacity.companies[0].name]);
+  const [utilizationNames, setUtilizationNames] = useState([data.utilization.companies[0].name]);
+  const [shipmentNames, setShipmentNames] = useState([data.shipments.companies[0].name]);
   const modules: { name: Module; meta: string }[] = [
     { name: "总览", meta: "全局概览" }, { name: "价格", meta: "11个品类" }, { name: "产能", meta: "21家企业" },
     { name: "产量", meta: "全球产量" }, { name: "开工率", meta: "16家企业" }, { name: "出货量", meta: "21家企业" },
   ];
   const selectedPrice = data.price.categories.find((item) => item.name === priceName) ?? data.price.categories[0];
-  const selectedProduction = data.production.companies.find((item) => item.name === productionName) ?? data.production.companies[0];
-  const selectedCapacity = data.capacity.companies.find((item) => item.name === capacityName) ?? data.capacity.companies[0];
-  const selectedUtilization = data.utilization.companies.find((item) => item.name === utilizationName) ?? data.utilization.companies[0];
-  const selectedShipment = data.shipments.companies.find((item) => item.name === shipmentName) ?? data.shipments.companies[0];
+  const selectedProductionEntities = data.production.companies.filter((item) => productionNames.includes(item.name));
+  const selectedCapacityEntities = data.capacity.companies.filter((item) => capacityNames.includes(item.name));
+  const selectedUtilizationEntities = data.utilization.companies.filter((item) => utilizationNames.includes(item.name));
+  const selectedShipmentEntities = data.shipments.companies.filter((item) => shipmentNames.includes(item.name));
+  const syncProductionCompany = (name: string) => { setProductionName(name); setProductionNames((current) => current.includes(name) ? current : [...current.slice(-(MAX_COMPANY_LINES - 1)), name]); };
+  const syncCapacityCompany = (name: string) => { setCapacityName(name); setCapacityNames((current) => current.includes(name) ? current : [...current.slice(-(MAX_COMPANY_LINES - 1)), name]); };
+  const syncUtilizationCompany = (name: string) => { setUtilizationName(name); setUtilizationNames((current) => current.includes(name) ? current : [...current.slice(-(MAX_COMPANY_LINES - 1)), name]); };
+  const syncShipmentCompany = (name: string) => { setShipmentName(name); setShipmentNames((current) => current.includes(name) ? current : [...current.slice(-(MAX_COMPANY_LINES - 1)), name]); };
   const priceLatest = selectedPrice.series[selectedPrice.series.length - 1];
   const latestProduction = lastNumber(data.production.total);
   const latestCapacity = lastNumber(data.capacity.total);
@@ -208,27 +265,27 @@ export default function Page() {
     </>;
 
     if (active === "产量") return <>
-      <section className="panel primary-panel"><PanelTitle index="01" title="全球储能电池产量" sub={`叠加查看：${selectedProduction.name}`} /><TrendChart title={`全球储能电池产量_${selectedProduction.name}`} unit="GWh" entityOptions={data.production.companies.map((item) => item.name)} entityValue={productionName} onEntityChange={setProductionName} lines={[{ name: "全球合计", color: COLORS[0], points: data.production.total }, { name: selectedProduction.name, color: COLORS[1], points: selectedProduction.values }]} /></section>
-      <section className="panel side-panel"><PanelTitle index="02" title="企业产量排行" sub="可选月份 · 点击联动" /><Ranking title="企业产量排行" entities={data.production.companies} periods={data.production.months} selected={productionName} onSelect={setProductionName} unit="GWh" /></section>
-      <section className="panel table-panel"><PanelTitle index="03" title="全部企业产量数据" sub="覆盖2024年1月至2026年6月" /><EntityTable entities={data.production.companies} selected={productionName} onSelect={setProductionName} unit="GWh" kind="standard" /></section>
+      <section className="panel primary-panel"><PanelTitle index="01" title="全球储能电池产量" sub={`已选择 ${productionNames.length} 家企业`} /><TrendChart title="全球储能电池产量_企业对比" unit="GWh" entityOptions={data.production.companies.map((item) => item.name)} entityValues={productionNames} onEntityValuesChange={(names) => { setProductionNames(names); if (names.length && !names.includes(productionName)) setProductionName(names.at(-1)!); }} lines={[{ name: "全球合计", color: COLORS[0], points: data.production.total }, ...selectedProductionEntities.map((entity, index) => ({ name: entity.name, color: COMPANY_COLORS[index], points: entity.values }))]} /></section>
+      <section className="panel side-panel"><PanelTitle index="02" title="企业产量排行" sub="可选月份 · 点击联动" /><Ranking title="企业产量排行" entities={data.production.companies} periods={data.production.months} selected={productionName} onSelect={syncProductionCompany} unit="GWh" /></section>
+      <section className="panel table-panel"><PanelTitle index="03" title="全部企业产量数据" sub="覆盖2024年1月至2026年6月" /><EntityTable entities={data.production.companies} selected={productionName} onSelect={syncProductionCompany} unit="GWh" kind="standard" /></section>
     </>;
 
     if (active === "产能") return <>
-      <section className="panel primary-panel"><PanelTitle index="01" title="全球储能电池产能" sub={`叠加查看：${selectedCapacity.name}`} /><TrendChart title={`全球储能电池产能_${selectedCapacity.name}`} unit="GWh/年" entityOptions={data.capacity.companies.map((item) => item.name)} entityValue={capacityName} onEntityChange={setCapacityName} lines={[{ name: "全球合计", color: COLORS[0], points: data.capacity.total }, { name: selectedCapacity.name, color: COLORS[2], points: selectedCapacity.values }]} /></section>
-      <section className="panel side-panel"><PanelTitle index="02" title="企业产能排行" sub="可选月份 · 点击联动" /><Ranking title="企业产能排行" entities={data.capacity.companies} periods={data.capacity.months} selected={capacityName} onSelect={setCapacityName} unit="GWh/年" /></section>
-      <section className="panel table-panel"><PanelTitle index="03" title="全部企业产能数据" sub="全球口径 · GWh/年" /><EntityTable entities={data.capacity.companies} selected={capacityName} onSelect={setCapacityName} unit="GWh/年" kind="standard" /></section>
+      <section className="panel primary-panel"><PanelTitle index="01" title="全球储能电池产能" sub={`已选择 ${capacityNames.length} 家企业`} /><TrendChart title="全球储能电池产能_企业对比" unit="GWh/年" entityOptions={data.capacity.companies.map((item) => item.name)} entityValues={capacityNames} onEntityValuesChange={(names) => { setCapacityNames(names); if (names.length && !names.includes(capacityName)) setCapacityName(names.at(-1)!); }} lines={[{ name: "全球合计", color: COLORS[0], points: data.capacity.total }, ...selectedCapacityEntities.map((entity, index) => ({ name: entity.name, color: COMPANY_COLORS[index], points: entity.values }))]} /></section>
+      <section className="panel side-panel"><PanelTitle index="02" title="企业产能排行" sub="可选月份 · 点击联动" /><Ranking title="企业产能排行" entities={data.capacity.companies} periods={data.capacity.months} selected={capacityName} onSelect={syncCapacityCompany} unit="GWh/年" /></section>
+      <section className="panel table-panel"><PanelTitle index="03" title="全部企业产能数据" sub="全球口径 · GWh/年" /><EntityTable entities={data.capacity.companies} selected={capacityName} onSelect={syncCapacityCompany} unit="GWh/年" kind="standard" /></section>
     </>;
 
     if (active === "开工率") return <>
-      <section className="panel primary-panel"><PanelTitle index="01" title="中国储能电池开工率" sub={`行业平均与 ${selectedUtilization.name}`} /><TrendChart title={`中国储能电池开工率_${selectedUtilization.name}`} unit="%" entityOptions={data.utilization.companies.map((item) => item.name)} entityValue={utilizationName} onEntityChange={setUtilizationName} lines={[{ name: "行业平均", color: COLORS[0], points: data.utilization.average.map((p) => [p[0], p[1] === null ? null : p[1] * 100]) }, { name: selectedUtilization.name, color: COLORS[3], points: selectedUtilization.values }]} /></section>
-      <section className="panel side-panel"><PanelTitle index="02" title="企业开工率排行" sub="可选月份 · 点击联动" /><Ranking title="企业开工率排行" entities={data.utilization.companies} periods={data.utilization.months} selected={utilizationName} onSelect={setUtilizationName} unit="%" percent /></section>
-      <section className="panel table-panel"><PanelTitle index="03" title="全部企业开工率" sub="覆盖2024年1月至2026年6月" /><EntityTable entities={data.utilization.companies} selected={utilizationName} onSelect={setUtilizationName} unit="%" percent kind="standard" /></section>
+      <section className="panel primary-panel"><PanelTitle index="01" title="中国储能电池开工率" sub={`已选择 ${utilizationNames.length} 家企业`} /><TrendChart title="中国储能电池开工率_企业对比" unit="%" entityOptions={data.utilization.companies.map((item) => item.name)} entityValues={utilizationNames} onEntityValuesChange={(names) => { setUtilizationNames(names); if (names.length && !names.includes(utilizationName)) setUtilizationName(names.at(-1)!); }} lines={[{ name: "行业平均", color: COLORS[0], points: data.utilization.average.map((p) => [p[0], p[1] === null ? null : p[1] * 100]) }, ...selectedUtilizationEntities.map((entity, index) => ({ name: entity.name, color: COMPANY_COLORS[index], points: entity.values }))]} /></section>
+      <section className="panel side-panel"><PanelTitle index="02" title="企业开工率排行" sub="可选月份 · 点击联动" /><Ranking title="企业开工率排行" entities={data.utilization.companies} periods={data.utilization.months} selected={utilizationName} onSelect={syncUtilizationCompany} unit="%" percent /></section>
+      <section className="panel table-panel"><PanelTitle index="03" title="全部企业开工率" sub="覆盖2024年1月至2026年6月" /><EntityTable entities={data.utilization.companies} selected={utilizationName} onSelect={syncUtilizationCompany} unit="%" percent kind="standard" /></section>
     </>;
 
     if (active === "出货量") return <>
-      <section className="panel primary-panel"><PanelTitle index="01" title="全球储能电池出货量" sub={`行业合计与 ${selectedShipment.name}`} /><TrendChart title={`全球储能电池出货量_${selectedShipment.name}`} unit="GWh" entityOptions={data.shipments.companies.map((item) => item.name)} entityValue={shipmentName} onEntityChange={setShipmentName} lines={[{ name: "全球合计", color: COLORS[0], points: data.shipments.total }, { name: selectedShipment.name, color: COLORS[1], points: selectedShipment.values }]} /></section>
-      <section className="panel side-panel"><PanelTitle index="02" title="企业出货排行" sub="可选月份 · 点击联动" /><Ranking title="企业出货排行" entities={data.shipments.companies} periods={data.shipments.months} selected={shipmentName} onSelect={setShipmentName} unit="GWh" /></section>
-      <section className="panel table-panel"><PanelTitle index="03" title="全部企业出货量" sub="2024年1月至2026年6月 · 全部21家" /><EntityTable entities={data.shipments.companies} selected={shipmentName} onSelect={setShipmentName} unit="GWh" kind="shipment" /></section>
+      <section className="panel primary-panel"><PanelTitle index="01" title="全球储能电池出货量" sub={`已选择 ${shipmentNames.length} 家企业`} /><TrendChart title="全球储能电池出货量_企业对比" unit="GWh" entityOptions={data.shipments.companies.map((item) => item.name)} entityValues={shipmentNames} onEntityValuesChange={(names) => { setShipmentNames(names); if (names.length && !names.includes(shipmentName)) setShipmentName(names.at(-1)!); }} lines={[{ name: "全球合计", color: COLORS[0], points: data.shipments.total }, ...selectedShipmentEntities.map((entity, index) => ({ name: entity.name, color: COMPANY_COLORS[index], points: entity.values }))]} /></section>
+      <section className="panel side-panel"><PanelTitle index="02" title="企业出货排行" sub="可选月份 · 点击联动" /><Ranking title="企业出货排行" entities={data.shipments.companies} periods={data.shipments.months} selected={shipmentName} onSelect={syncShipmentCompany} unit="GWh" /></section>
+      <section className="panel table-panel"><PanelTitle index="03" title="全部企业出货量" sub="2024年1月至2026年6月 · 全部21家" /><EntityTable entities={data.shipments.companies} selected={shipmentName} onSelect={syncShipmentCompany} unit="GWh" kind="shipment" /></section>
     </>;
 
     return <>
