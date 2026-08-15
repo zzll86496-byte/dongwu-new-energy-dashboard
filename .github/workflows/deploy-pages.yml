@@ -31,6 +31,12 @@ jobs:
         run: npm ci
       - name: Build static site
         run: npm run build
+      - name: Normalize GitHub Pages asset directory
+        run: |
+          if [ -d dist/client/dongwu-new-energy-dashboard/_next ]; then
+            mv dist/client/dongwu-new-energy-dashboard/_next dist/client/_next
+            rmdir dist/client/dongwu-new-energy-dashboard
+          fi
       - name: Disable Jekyll processing
         run: touch dist/client/.nojekyll
       - name: Configure Pages
