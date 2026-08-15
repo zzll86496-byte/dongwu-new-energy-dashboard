@@ -33,6 +33,15 @@
 .core-model-grid{display:grid;grid-template-columns:minmax(310px,.7fr) minmax(0,1.3fr);gap:12px}
 .core-model-grid>.sales-panel{min-width:0}
 .core-model-range{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap}
+.core-company-select{position:relative;display:flex;flex-direction:column;gap:2px;color:#7b878e;font-size:7px;font-weight:600}
+.core-company-trigger{position:relative;min-width:150px;height:27px;overflow:hidden;border:1px solid #8ca1b2;border-radius:3px;background:#fff;color:#29475a;padding:4px 27px 4px 8px;font-size:8px;text-align:left;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.core-company-trigger:after{position:absolute;top:50%;right:9px;width:7px;height:7px;border-right:1.5px solid #173f62;border-bottom:1.5px solid #173f62;content:"";transform:translateY(-70%) rotate(45deg)}
+.core-company-trigger:focus-visible{border-color:#173f62;outline:2px solid rgba(23,63,98,.18);outline-offset:1px}
+.core-company-menu{position:absolute;top:37px;right:0;z-index:30;width:210px;max-height:330px;overflow:auto;border:1px solid #8697a3;background:#fff;box-shadow:0 8px 20px rgba(20,43,58,.16)}
+.core-company-menu button{display:block;width:100%;overflow:hidden;border:0;background:#fff;color:#173f62;padding:8px 12px;font-size:9px;text-align:left;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.core-company-menu button:hover,.core-company-menu button:focus-visible{background:#eef2f4;outline:none}
+.core-company-menu button.selected{background:#858585;color:#fff;font-weight:700}
+.core-company-menu button:disabled{color:#aab3b9;cursor:not-allowed}
 .company-model-history{margin-top:12px;min-width:0}
 .company-model-history>header{align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
 .company-model-controls{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap}
@@ -74,6 +83,9 @@
   .core-chart-controls label{flex:1}
   .core-chart-controls select{width:100%}
   .core-model-range{width:100%}
+  .core-company-select{flex:1;min-width:145px}
+  .core-company-trigger{width:100%;min-width:0}
+  .core-company-menu{right:auto;left:0;width:max(100%,210px)}
   .core-model-range label{flex:1}
   .core-model-range select{width:100%}
   .company-model-history>header{align-items:flex-start;flex-direction:column}

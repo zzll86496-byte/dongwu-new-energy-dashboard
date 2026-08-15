@@ -196,6 +196,17 @@ function CompanyPicker({ companies, selected, onChange }: { companies: string[];
   return <div className="company-picker"><button className="picker-trigger" onClick={() => setOpen(!open)}><span>选择企业</span><strong>{selected.length} / 6</strong></button>{open && <div className="picker-popover"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索企业" autoFocus /><div>{visible.map(name => <label key={name}><input type="checkbox" checked={selected.includes(name)} disabled={!selected.includes(name) && selected.length >= 6} onChange={() => toggle(name)} /><span>{name}</span></label>)}</div></div>}</div>;
 }
 
+function InlineCompanyPicker({ companies, selected, onChange }: { companies: string[]; selected: string[]; onChange: (value: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const toggle = (name: string) => {
+    if (selected.includes(name)) {
+      if (selected.length > 1) onChange(selected.filter(item => item !== name));
+    } else if (selected.length < 6) onChange([...selected, name]);
+  };
+  const triggerLabel = selected.length === 1 ? selected[0] : selected.length > 1 ? `${selected[0]}等${selected.length}家` : "选择企业";
+  return <div className="core-company-select"><span>企业</span><button type="button" className="core-company-trigger" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}>{triggerLabel}</button>{open && <div className="core-company-menu" role="listbox" aria-label="选择对比企业" aria-multiselectable="true">{companies.map(name => { const active = selected.includes(name); return <button type="button" role="option" aria-selected={active} className={active ? "selected" : ""} disabled={!active && selected.length >= 6} key={name} onClick={() => toggle(name)}>{name}</button>; })}</div>}</div>;
+}
+
 function ModelPicker({ options, selected, onChange }: { options: { key: string; label: string; detail: string }[]; selected: string[]; onChange: (value: string[]) => void }) {
   const [open, setOpen] = useState(false);
   const maxSelected = 8;
@@ -254,10 +265,9 @@ function ModelCoreSpotlight({ scope }: { scope: Scope }) {
   const selectedSeries = companies.filter(item => selected.includes(item.name));
   const trendPeriods = modelData.periods.slice(trendStart, trendEnd + 1);
   return <section className="core-model-section">
-    <div className="core-model-toolbar"><CompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /></div>
     <div className="core-model-grid">
       <article className="sales-panel"><header><div><span>时间点横向对比</span><h2>{modelData.periods[rankingIndex]} 车企销量排名</h2></div><label className="core-single-period">时间<select value={rankingIndex} onChange={event => setRankingIndex(Number(event.target.value))}>{modelData.periods.map((period, index) => <option key={period} value={index}>{period}</option>)}</select></label></header><SnapshotBars percent={false} rows={latestRanking.slice(0, 15).map(item => ({ name: item.name, value: item.values[rankingIndex] }))} /></article>
-      <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><label>起始<select value={trendStart} onChange={event => { const next = Number(event.target.value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }}>{modelData.periods.map((period, index) => <option key={`model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select value={trendEnd} onChange={event => { const next = Number(event.target.value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }}>{modelData.periods.map((period, index) => <option key={`model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} modelStyle /></article>
+      <article className="sales-panel"><header><div><span>多车企历史趋势</span><h2>{scope === "wholesale" ? "批发" : "零售"}销量同图</h2></div><div className="core-model-range"><InlineCompanyPicker companies={companies.map(item => item.name)} selected={selected} onChange={setSelected} /><label>起始<select value={trendStart} onChange={event => { const next = Number(event.target.value); setTrendStart(next); if (next > trendEnd) setTrendEnd(next); }}>{modelData.periods.map((period, index) => <option key={`model-start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select value={trendEnd} onChange={event => { const next = Number(event.target.value); setTrendEnd(next); if (next < trendStart) setTrendStart(next); }}>{modelData.periods.map((period, index) => <option key={`model-end-${period}`} value={index}>{period}</option>)}</select></label></div></header><LineChart periods={trendPeriods} series={selectedSeries.map((item, index) => ({ name: item.name, values: item.values.slice(trendStart, trendEnd + 1), color: palette[index % palette.length] }))} modelStyle /></article>
     </div>
     <CompanyModelHistory modelData={modelData} scope={scope} />
   </section>;
