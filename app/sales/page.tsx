@@ -64,7 +64,7 @@ function lastCoreValue(values: (number | null)[]) {
   return null;
 }
 
-function CoreChartFigure({ chart }: { chart: CoreChart }) {
+function CoreChartFigure({ chart, wide = false }: { chart: CoreChart; wide?: boolean }) {
   const cumulative = chart.category === "累计销量";
   const meaningfulStartIndex = Math.max(chart.categories.findIndex((_, index) => chart.series.some(series => !series.percent && series.values[index] !== null && Math.abs(series.values[index] as number) > 1e-12)), 0);
   const [startIndex, setStartIndex] = useState(meaningfulStartIndex);
@@ -86,7 +86,7 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
   const selectedIndexes = cumulative ? cumulativeIndexes.slice(startYearIndex, endYearIndex + 1) : chart.categories.map((_, index) => index).slice(startIndex, endIndex + 1);
   const categories = selectedIndexes.map(index => cumulative ? chart.categories[index].slice(0, 4) : chart.categories[index]);
   const shownSeries = chart.series.map(series => ({ ...series, values: selectedIndexes.map(index => series.values[index]) }));
-  const width = 760;
+  const width = wide ? 1120 : 760;
   const height = 292;
   const left = 48;
   const right = 48;
@@ -109,7 +109,7 @@ function CoreChartFigure({ chart }: { chart: CoreChart }) {
   const x = (index: number) => left + step * (index + .5);
   const volumeY = (value: number) => top + (volumeMax - value) / volumeMax * plotHeight;
   const percentY = (value: number) => top + (percentMax - value) / percentSpan * plotHeight;
-  return <article className="core-chart-card">
+  return <article className={`core-chart-card${wide ? " core-chart-card--wide" : ""}`}>
     <header><div><span>{chart.category}</span><h3>{chart.title}</h3></div><div className="core-chart-controls"><b>{chart.source}</b>{cumulative ? <><label>累计至<select aria-label={`${chart.title}累计区间`} value={cumulativeMonth} onChange={event => { const nextMonth = event.target.value; const nextCount = chart.categories.filter((period, index) => period.slice(5) === nextMonth && chart.series.some(series => !series.percent && series.values[index] !== null)).length; setCumulativeMonth(nextMonth); setStartYearIndex(0); setEndYearIndex(Math.max(nextCount - 1, 0)); }}>{availableCumulativeMonths.map(month => <option key={`cumulative-${month}`} value={month}>1—{Number(month)}月</option>)}</select></label><label>起始年度<select aria-label={`${chart.title}起始年度`} value={startYearIndex} onChange={event => { const next = Number(event.target.value); setStartYearIndex(next); if (next > endYearIndex) setEndYearIndex(next); }}>{cumulativeIndexes.map((index, optionIndex) => <option key={`year-start-${chart.categories[index]}`} value={optionIndex}>{chart.categories[index].slice(0, 4)}</option>)}</select></label><label>结束年度<select aria-label={`${chart.title}结束年度`} value={endYearIndex} onChange={event => { const next = Number(event.target.value); setEndYearIndex(next); if (next < startYearIndex) setStartYearIndex(next); }}>{cumulativeIndexes.map((index, optionIndex) => <option key={`year-end-${chart.categories[index]}`} value={optionIndex}>{chart.categories[index].slice(0, 4)}</option>)}</select></label></> : <><label>起始<select aria-label={`${chart.title}起始时间`} value={startIndex} onChange={event => { const next = Number(event.target.value); setStartIndex(next); if (next > endIndex) setEndIndex(next); }}>{chart.categories.map((period, index) => <option key={`start-${period}`} value={index}>{period}</option>)}</select></label><label>结束<select aria-label={`${chart.title}结束时间`} value={endIndex} onChange={event => { const next = Number(event.target.value); setEndIndex(next); if (next < startIndex) setStartIndex(next); }}>{chart.categories.map((period, index) => <option key={`end-${period}`} value={index}>{period}</option>)}</select></label></>}</div></header>
     <div className="core-chart-legend">{shownSeries.map((series, index) => <span key={`${series.name}-${index}`}><i className={series.mode} style={{ background: palette[index % palette.length] }} />{series.name}</span>)}</div>
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${chart.title}图表`}>
@@ -144,7 +144,7 @@ function CoreChartGallery({ boardKey }: { boardKey: SheetKey }) {
       : "core-chart-grid";
   return <section className="core-chart-section">
     {categories.length > 1 && <div className="core-category-tabs">{categories.map(item => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(category === item ? "" : item)}>{item}</button>)}</div>}
-    <div className={gridClassName}>{visible.map(chart => <CoreChartFigure key={chart.id} chart={chart} />)}</div>
+    <div className={gridClassName}>{visible.map(chart => <CoreChartFigure key={chart.id} chart={chart} wide={visible.length === 1} />)}</div>
   </section>;
 }
 

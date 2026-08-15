@@ -24,7 +24,8 @@
 .core-chart-legend i.line{height:2px}
 .core-chart-card svg{display:block;width:100%;height:255px;overflow:visible}
 .core-gridline{stroke:#e7ecef;stroke-width:1}
-.core-axis-label,.core-x-label{fill:#7c8991;font-size:9px}
+.core-axis-label,.core-x-label{fill:#7c8991;font-size:9px;font-variant-numeric:tabular-nums}
+.core-chart-card--wide .core-x-label{font-size:8.5px;letter-spacing:.1px}
 .core-chart-card>footer{display:flex;gap:7px;overflow:auto;border-top:1px solid #edf0f2;padding:10px 14px;background:#fbfcfc}
 .core-chart-card>footer>em{margin-right:auto;color:#7c8991;font-size:8px;font-style:normal;white-space:nowrap}
 .core-chart-card>footer span{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
