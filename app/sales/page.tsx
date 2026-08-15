@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import dataJson from "./sales-data.json";
 import coreChartsJson from "./core-chart-data.json";
 import { ResearchPageHeader } from "../ResearchPageHeader";
+import { sitePath } from "../site-path";
+
+export const dynamic = "force-static";
 import "./sales.css";
 import "./raw.css";
 import "./sheets.css";
@@ -409,5 +412,5 @@ export default function SalesPage() {
   ];
   const [sheetKey, setSheetKey] = useState<SheetKey>("wholesale-industry");
   const board = boards.find(item => item.key === sheetKey) || boards[0];
-  return <main className="sales-shell"><aside className="sales-sidebar"><a className="sales-brand" href="/" aria-label="返回东吴电新数据库首页"><img src="/soochow-securities.png" width="218" height="48" alt="东吴证券 Soochow Securities" /></a><p>工作表导航</p><nav>{boards.map((item, index) => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}><i>{String(index + 1).padStart(2, "0")}</i><span><b>{item.name}</b><small>{item.detail}</small></span></button>)}</nav><div className="sales-current"><span>CURRENT DATABASE</span><b>国内电动车销量</b><small>4 CORE SHEETS</small></div><a className="back-home" href="/">← 返回数据库总库</a></aside><section className="sales-workspace"><ResearchPageHeader title="国内电动车销量数据库" context={`${board.name} · ${board.source === "models" ? "企业车型" : "行业总览"}`} updated={data.updated} /><div className="mobile-view-switch sheet-switch">{boards.map(item => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}>{item.name}</button>)}</div><CoreChartGallery boardKey={sheetKey} />{board.source === "models" && <ModelCoreSpotlight key={`core-${sheetKey}`} scope={board.scope} />}<footer>数据来源：乘联会、中汽协、第一商用车，东吴证券研究所 · 长图口径更新至 2026-07</footer></section></main>;
+  return <main className="sales-shell"><aside className="sales-sidebar"><a className="sales-brand" href={sitePath("/")} aria-label="返回东吴电新数据库首页"><img src={sitePath("/soochow-securities.png")} width="218" height="48" alt="东吴证券 Soochow Securities" /></a><p>工作表导航</p><nav>{boards.map((item, index) => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}><i>{String(index + 1).padStart(2, "0")}</i><span><b>{item.name}</b><small>{item.detail}</small></span></button>)}</nav><div className="sales-current"><span>CURRENT DATABASE</span><b>国内电动车销量</b><small>4 CORE SHEETS</small></div><a className="back-home" href={sitePath("/")}>← 返回数据库总库</a></aside><section className="sales-workspace"><ResearchPageHeader title="国内电动车销量数据库" context={`${board.name} · ${board.source === "models" ? "企业车型" : "行业总览"}`} updated={data.updated} /><div className="mobile-view-switch sheet-switch">{boards.map(item => <button key={item.key} className={sheetKey === item.key ? "active" : ""} onClick={() => setSheetKey(item.key)}>{item.name}</button>)}</div><CoreChartGallery boardKey={sheetKey} />{board.source === "models" && <ModelCoreSpotlight key={`core-${sheetKey}`} scope={board.scope} />}<footer>数据来源：乘联会、中汽协、第一商用车，东吴证券研究所 · 长图口径更新至 2026-07</footer></section></main>;
 }

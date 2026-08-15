@@ -6,6 +6,9 @@ import structureSource from "./data/domestic-structure.json";
 import domesticMakerSource from "./data/domestic-makers.json";
 import globalMarketsSource from "./data/global-markets.json";
 import { ResearchPageHeader } from "../ResearchPageHeader";
+import { sitePath } from "../site-path";
+
+export const dynamic = "force-static";
 
 type Tab = "domestic" | "chemistry" | "chinaRank" | "global";
 type Series = { name: string; values: number[]; color: string };
@@ -764,7 +767,7 @@ export default function Home() {
   const current = useMemo(() => tabs.find(t => t.key === tab)!, [tab]);
   return <div className="installation-scope"><div className="app-frame">
     <aside className="side-panel">
-      <a className="side-brand" href="/" aria-label="返回东吴电新数据库首页"><img src="/soochow-securities.png" width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
+      <a className="side-brand" href={sitePath("/")} aria-label="返回东吴电新数据库首页"><img src={sitePath("/soochow-securities.png")} width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
       <div className="side-label">DATABASE MODULE</div>
       <div className="side-nav">{tabs.map((item, index) => <button type="button" className={tab === item.key ? "active" : ""} key={item.key} onClick={() => setTab(item.key)}><i>{String(index + 1).padStart(2, "0")}</i><span><b>{item.name}</b><small>{item.scope}</small></span></button>)}</div>
       <div className="side-current"><span>CURRENT DATABASE</span><b>动力电池装机</b><small>NO. 5000</small></div>

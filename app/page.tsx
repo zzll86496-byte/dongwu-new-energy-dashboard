@@ -1,12 +1,15 @@
 import "./portal-home.css";
+import { sitePath } from "./site-path";
+
+export const dynamic = "force-static";
 
 const databases = [
-  { href: "/database", title: "储能电池产业链数据库" },
-  { href: "/lithium", title: "锂电产业链排产数据库" },
-  { href: "/battery-export", title: "国内电池出口数据库" },
-  { href: "/vehicle-supply", title: "动力电池车企配套数据库" },
-  { href: "/installation", title: "电动车装机数据库" },
-  { href: "/sales", title: "国内电动车销量数据库" },
+  { href: sitePath("/database/"), title: "储能电池产业链数据库" },
+  { href: sitePath("/lithium/"), title: "锂电产业链排产数据库" },
+  { href: sitePath("/battery-export/"), title: "国内电池出口数据库" },
+  { href: sitePath("/vehicle-supply/"), title: "动力电池车企配套数据库" },
+  { href: sitePath("/installation/"), title: "电动车装机数据库" },
+  { href: sitePath("/sales/"), title: "国内电动车销量数据库" },
 ];
 
 export default function Home() {
@@ -17,9 +20,9 @@ export default function Home() {
       </a>
 
       <header className="database-portal__header">
-        <a className="database-portal__brand" href="/" aria-label="东吴证券首页">
+        <a className="database-portal__brand" href={sitePath("/")} aria-label="东吴证券首页">
           <img
-            src="/soochow-securities.png"
+            src={sitePath("/soochow-securities.png")}
             width="218"
             height="48"
             alt="东吴证券 Soochow Securities"

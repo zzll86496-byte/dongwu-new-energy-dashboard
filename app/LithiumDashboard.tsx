@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, type CSSProperties } from "react";
 import rawData from "./data/lithium-production.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "./excel-export";
 import { ResearchPageHeader } from "./ResearchPageHeader";
+import { sitePath } from "./site-path";
 import "./planning.css";
 
 type Value = { period: string; raw: string; value: number | null; mom: number | null };
@@ -174,7 +175,7 @@ export function LithiumDashboard() {
   return <main className="planning-shell">
     <div className="planning-layout">
       <aside className="planning-sidebar">
-        <a className="sidebar-brand" href="/" aria-label="返回东吴电新数据库首页"><img src="/soochow-securities.png" width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
+        <a className="sidebar-brand" href={sitePath("/")} aria-label="返回东吴电新数据库首页"><img src={sitePath("/soochow-securities.png")} width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
         <div className="sidebar-rule" />
         <div className="sidebar-block"><label>{T.month}</label><select value={period} onChange={(event) => setPeriod(event.target.value)}>{data.periods.map((item) => <option key={item}>{item}</option>)}</select></div>
         <div className="sidebar-block"><label>{T.segment}</label><div className="segment-buttons">{data.categories.map((item, index) => <button className={item.key === categoryKey ? "active" : ""} key={item.key} onClick={() => { setCategoryKey(item.key); setSelectedCompanyName(""); }}><i style={{ background: palette[index % palette.length] }} />{item.name}</button>)}</div></div>

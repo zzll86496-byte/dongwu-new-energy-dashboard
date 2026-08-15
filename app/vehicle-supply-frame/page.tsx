@@ -7,6 +7,8 @@ import dashboardCss from "./vehicle-supply.css?raw";
 import templateCss from "./research-template.css?raw";
 import headerCss from "../research-page-header.css?raw";
 
+export const dynamic = "force-static";
+
 const hostCss = `
   :host {
     display: block;

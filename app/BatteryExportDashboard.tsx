@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import rawData from "./data/battery-export.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "./excel-export";
 import { ResearchPageHeader } from "./ResearchPageHeader";
+import { sitePath } from "./site-path";
 import "./export.css";
 import "./research-template.css";
 
@@ -90,7 +91,7 @@ export function BatteryExportDashboard() {
 
   return <main className="export-shell"><div className="export-layout">
     <aside className="export-sidebar">
-      <a className="export-brand" href="/" aria-label="返回东吴电新数据库首页"><img src="/soochow-securities.png" width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
+      <a className="export-brand" href={sitePath("/")} aria-label="返回东吴电新数据库首页"><img src={sitePath("/soochow-securities.png")} width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
       <div className="export-side-block"><label>分析月份</label><select value={period} onChange={(event) => setPeriod(event.target.value)}>{[...data.periods].reverse().map((item) => <option value={item} key={item}>{longPeriod(item)}</option>)}</select></div>
       <div className="export-side-block"><label>分析维度</label><nav>{(Object.keys(labels) as (keyof typeof labels)[]).map((key) => <button className={dimension===key?"active":""} key={key} onClick={() => { setDimension(key); setSelectedName(""); }}><i />{labels[key]}</button>)}</nav></div>
       <div className="export-side-block"><label>当前选择</label><div className="export-selection"><strong>{selected?.entity.name ?? "—"}</strong><span>{labels[dimension]} · {longPeriod(period)}</span></div></div>

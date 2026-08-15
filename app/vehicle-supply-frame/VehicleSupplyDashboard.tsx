@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import history from "./history.json";
 import { exportChartWorkbook, type ChartWorkbookSpec } from "../excel-export";
 import { ResearchPageHeader } from "../ResearchPageHeader";
+import { sitePath } from "../site-path";
 
 type PageKey = "overview" | "relations" | "company";
 type TrendRow = { period: string; totalGwh: number; units: number; shares: Record<string, number> };
@@ -495,7 +496,7 @@ export default function Dashboard() {
   return (
     <main className="app-shell supply-template">
       <aside className="supply-sidebar">
-        <a className="supply-brand" href="/" aria-label="返回东吴电新数据库首页"><img src="/soochow-securities.png" width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
+        <a className="supply-brand" href={sitePath("/")} aria-label="返回东吴电新数据库首页"><img src={sitePath("/soochow-securities.png")} width="218" height="48" alt="东吴证券 Soochow Securities" /></a>
         <div className="supply-filter"><label>分析月份</label><select aria-label="数据月份" value={period} onChange={event=>setPeriod(event.target.value)}>{[...historyData.periods].reverse().map(item=><option value={item} key={item}>{periodText(item)}</option>)}</select></div>
         <div className="supply-filter"><label>车辆类别</label><select aria-label="车辆类别" value={category} onChange={event=>setCategory(event.target.value)}>{historyData.categoryOptions.map(item=><option value={item} key={item}>{item}</option>)}</select></div>
         <div className="supply-nav-block"><label>分析维度</label><nav className="supply-nav" aria-label="仪表盘页面">{NAV.map(item=><button key={item.key} onClick={()=>setPage(item.key)} className={page===item.key?"selected":""}><span><b>{item.label}</b><small>{item.note}</small></span></button>)}</nav></div>
