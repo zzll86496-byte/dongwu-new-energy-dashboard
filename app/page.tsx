@@ -10,7 +10,7 @@ const databases = [
   { href: sitePath("/vehicle-supply/"), title: "动力电池车企配套数据库" },
   { href: sitePath("/installation/"), title: "电动车装机数据库" },
   { href: sitePath("/sales/"), title: "国内电动车销量数据库" },
-  { href: sitePath("/global-sales/"), title: "全球电动车销量数据库" },
+  { href: sitePath("/global-sales"), title: "全球电动车销量数据库" },
 ];
 
 export default function Home() {
