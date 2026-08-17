@@ -10,6 +10,7 @@ const databases = [
   { href: sitePath("/vehicle-supply/"), title: "动力电池车企配套数据库" },
   { href: sitePath("/installation/"), title: "电动车装机数据库" },
   { href: sitePath("/sales/"), title: "国内电动车销量数据库" },
+  { href: sitePath("/global-sales/"), title: "全球电动车销量数据库" },
 ];
 
 export default function Home() {
@@ -36,7 +37,7 @@ export default function Home() {
           <p>选择数据库进入查询</p>
           <div className="database-portal__update" role="status">
             <i aria-hidden="true" />
-            <span>最新数据：电动车销量已覆盖至2026年7月</span>
+            <span>最新数据：国内销量至2026年7月，全球销量至2026年6月</span>
           </div>
         </div>
 
